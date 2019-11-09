@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "shader.h"
 #include "utils.h"
+#include "math.h"
 
 int compile_shader(const char* vertex_file, const char* fragment_file) {
 	int success;
@@ -54,4 +55,10 @@ int compile_shader(const char* vertex_file, const char* fragment_file) {
     glDeleteShader(fragment_shader);
 
 	return shader_program;
+}
+
+void set_matrix4(unsigned int program, const char* name, Matrix4 *mat) {
+	glUseProgram(program);
+	unsigned int transform_loc = glGetUniformLocation(program, name);
+	glUniformMatrix4fv(transform_loc, 1, GL_FALSE, mat->matrix);
 }

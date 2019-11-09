@@ -1,5 +1,7 @@
 #include <glad/glad.h>
+#include <stdio.h> // @Tmp
 #include "triangle.h"
+#include "shader.h"
 
 void make_triangle(Triangle *triangle) {
 	float vertices[] = {
@@ -17,10 +19,16 @@ void make_triangle(Triangle *triangle) {
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	init_matrix(&triangle->model);
 }
 
 void draw_triangle(Triangle *triangle, unsigned int program) {
 	glUseProgram(program);
+
+	make_identity(&triangle->model);
+	set_matrix4(program, "transform", &triangle->model);
+
 	glBindVertexArray(triangle->vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }

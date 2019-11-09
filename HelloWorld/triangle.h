@@ -1,11 +1,14 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
+#include "math.h"
+
 struct Triangle {
 	unsigned int vao;
 	unsigned int vbo;
+	Matrix4 model;
 };
-#define Triangle struct Triangle
+typedef struct Triangle Triangle;
 
 void make_triangle(Triangle *triangle);
 void draw_triangle(Triangle *triangle, unsigned int program);
