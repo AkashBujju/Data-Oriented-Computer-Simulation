@@ -5,6 +5,7 @@
 #include <string.h>
 #include "shader.h"
 #include "triangle.h"
+#include "cube.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -47,8 +48,10 @@ int main(int argc, char** argv) {
 
 	/* tmp */
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
-	Triangle triangle;
-	make_triangle(&triangle, shader);
+	// Triangle triangle;
+	// make_triangle(&triangle, shader);
+	Cuboid cuboid;
+	make_cuboid(&cuboid, shader);
 	/* tmp */
 
 	Matrix4 view, projection;
@@ -67,13 +70,15 @@ int main(int argc, char** argv) {
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
 
-		draw_triangle(&triangle, &view, &projection);
+		// draw_triangle(&triangle, &view, &projection);
+		draw_cuboid(&cuboid, &view, &projection);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	delete_triangle(&triangle);
+	// delete_triangle(&triangle);
+	delete_cuboid(&cuboid);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 

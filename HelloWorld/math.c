@@ -146,5 +146,4 @@ void print_matrix(Matrix4 *mat) {
 		printf("%.2f ", ptr[i]);
 	}
 	printf("\n\n");
-
 }

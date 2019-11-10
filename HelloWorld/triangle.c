@@ -32,7 +32,7 @@ void draw_triangle(Triangle *triangle, const Matrix4* view, const Matrix4* proje
 
 	float time = (float)glfwGetTime();
 	static float degrees = 0;
-	degrees = sin(time) * 360;
+	degrees = sin(time * 0.2f) * 360;
 
 	make_identity(&triangle->model);
 	rotate_z(&triangle->model, degrees);
