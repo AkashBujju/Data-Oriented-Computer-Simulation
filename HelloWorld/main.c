@@ -48,16 +48,26 @@ int main(int argc, char** argv) {
 	/* tmp */
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
 	Triangle triangle;
-	make_triangle(&triangle);
+	make_triangle(&triangle, shader);
 	/* tmp */
+
+	Matrix4 view, projection;
+	make_identity(&projection);
+	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		draw_triangle(&triangle, shader);
+		make_identity(&view);
+		translate_matrix(&view, 0, 0, -10.0f);
+
+		set_matrix4(shader, "view", &view);
+		set_matrix4(shader, "projection", &projection);
+
+		draw_triangle(&triangle, &view, &projection);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

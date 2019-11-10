@@ -53,7 +53,7 @@ void translate_matrix(Matrix4 *mat, float x, float y, float z) {
 	m[14] = z;
 }
 
-Matrix4 rotate_z(Matrix4 *mat, float degree) {
+void rotate_z(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
@@ -66,10 +66,10 @@ Matrix4 rotate_z(Matrix4 *mat, float degree) {
 	m2[4] = -m2[1];
 	m2[5] = m2[0];
 
-	return multiply_matrix(mat, &tmp);
+	multiply_matrix(mat, &tmp);
 }
 
-Matrix4 rotate_y(Matrix4 *mat, float degree) {
+void rotate_y(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
@@ -82,10 +82,10 @@ Matrix4 rotate_y(Matrix4 *mat, float degree) {
 	m2[2] = -m2[8];
 	m2[10] = m2[0];
 
-	return multiply_matrix(mat, &tmp);
+	multiply_matrix(mat, &tmp);
 }
 
-Matrix4 rotate_x(Matrix4 *mat, float degree) {
+void rotate_x(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
@@ -98,10 +98,10 @@ Matrix4 rotate_x(Matrix4 *mat, float degree) {
 	m2[9] = -m2[6];
 	m2[10] = m2[5];
 
-	return multiply_matrix(mat, &tmp);
+	multiply_matrix(mat, &tmp);
 }
 
-Matrix4 multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
+void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	Matrix4 res;
 	init_matrix(&res);
 	float *r = res.matrix;
@@ -114,7 +114,7 @@ Matrix4 multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 			for(int k = 0; k < 4; ++k)
 				r[4 * i + j] += a[4 * i + k] * b[4 * k + j];
 	
-	return res;
+	copy_matrix(&res, m1);
 }
 
 Matrix4 perspective(const float fov, const float aspect_ratio, const float z_near, const float z_far) {
@@ -131,6 +131,11 @@ Matrix4 perspective(const float fov, const float aspect_ratio, const float z_nea
 	m[14] = -(2 * z_far * z_near) / (z_far - z_near);
 
 	return res;
+}
+
+inline void copy_matrix(Matrix4 *from, Matrix4 *to) {
+	for(int i = 0; i < 16; ++i)
+		to->matrix[i] = from->matrix[i];
 }
 
 void print_matrix(Matrix4 *mat) {
