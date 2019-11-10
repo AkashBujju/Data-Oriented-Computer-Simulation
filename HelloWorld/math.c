@@ -10,10 +10,8 @@ void init_matrix(Matrix4 *mat) {
 
 void make_identity(Matrix4 *mat) {
 	float *m = mat->matrix;
-	m[0] = 1; m[1] = 0; m[2] = 0; m[3] = 0;
-	m[4] = 0; m[5] = 1; m[6] = 0; m[7] = 0;
-	m[8] = 0; m[9] = 0; m[10] = 1; m[11] = 0;
-	m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+	memset(m, 0, sizeof(float) * 16);
+	m[0] = 1; m[5] = 1; m[10] = 1; m[15] = 1;
 }
 
 void init_vector(Vector3 *vec, float x, float y, float z) {
@@ -58,7 +56,6 @@ void translate_matrix(Matrix4 *mat, float x, float y, float z) {
 Matrix4 rotate_z(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
-	init_matrix(&tmp);
 	make_identity(&tmp);
 
 	float *m1 = mat->matrix;
@@ -66,8 +63,8 @@ Matrix4 rotate_z(Matrix4 *mat, float degree) {
 
 	m2[0] = cos(in_radians);
 	m2[1] = sin(in_radians);
-	m2[4] = -sin(in_radians);
-	m2[5] = cos(in_radians);
+	m2[4] = -m2[1];
+	m2[5] = m2[0];
 
 	return multiply_matrix(mat, &tmp);
 }
@@ -88,13 +85,29 @@ Matrix4 multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	return res;
 }
 
-// void print_matrix(Matrix4 *mat) {
-// 	const float *ptr = mat->matrix;
-// 	for(int i = 0; i < 16; ++i) {
-// 		if(i % 4 == 0)
-// 			printf("\n");
-// 		printf("%.2f ", ptr[i]);
-// 	}
-// 	printf("\n\n");
-// 
-// }
+Matrix4 perspective(const float fov, const float aspect_ratio, const float z_near, const float z_far) {
+	Matrix4 res;
+	init_matrix(&res);
+	float *m = res.matrix;
+	float fov_in_radians = 0.0174533f * fov;
+
+	const float tan_half_fov = tan(fov_in_radians / 2.0f);
+	m[0] = 1.0f / (aspect_ratio * tan_half_fov);
+	m[5] = 1.0f / tan_half_fov;
+	m[10] = -(z_far + z_near) / (z_far - z_near);
+	m[11] = -1;
+	m[14] = -(2 * z_far * z_near) / (z_far - z_near);
+
+	return res;
+}
+
+void print_matrix(Matrix4 *mat) {
+	const float *ptr = mat->matrix;
+	for(int i = 0; i < 16; ++i) {
+		if(i % 4 == 0)
+			printf("\n");
+		printf("%.2f ", ptr[i]);
+	}
+	printf("\n\n");
+
+}

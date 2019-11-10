@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 #include <stdio.h> // @Tmp
+#include <GLFW/glfw3.h>
+#include <math.h>
 #include "triangle.h"
 #include "shader.h"
 
@@ -22,18 +24,35 @@ void make_triangle(Triangle *triangle) {
 
 	init_matrix(&triangle->model);
 	init_vector(&triangle->pos, 0, 0, 0);
+
+	// Matrix4 proj = perspective(45.0f, 1440 / 900.0f, 0.1f, 100.0f);
+	// print_matrix(&proj);
 }
 
 void draw_triangle(Triangle *triangle, unsigned int program) {
 	glUseProgram(program);
 
+	float time = (float)glfwGetTime();
+	static float degrees = 0;
+	degrees = sin(time) * 360;
+
 	make_identity(&triangle->model);
 
-	triangle->model = rotate_z(&triangle->model, 30);
-	scale(&triangle->model, 0.25f, 0.25, 0);
-	translate_matrix(&triangle->model, 0.5f, 0.5f, 0);
+	Matrix4 model, view, projection;
+	make_identity(&model);
+	make_identity(&view);
+	make_identity(&projection);
 
-	set_matrix4(program, "transform", &triangle->model);
+	translate_matrix(&view, 0, 0, -10.0f);
+	projection = perspective(45.0f, 1440 / 900.0f, 0.1f, 100.0f);
+
+	// triangle->model = rotate_z(&triangle->model, degrees);
+	// scale(&triangle->model, 0.25f, 0.25, 0);
+	// translate_matrix(&triangle->model, 0.5f, 0.5f, 0);
+
+	set_matrix4(program, "model", &model);
+	set_matrix4(program, "view", &view);
+	set_matrix4(program, "projection", &projection);
 
 	glBindVertexArray(triangle->vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
