@@ -62,3 +62,9 @@ void set_matrix4(unsigned int program, const char* name, Matrix4 *mat) {
 	unsigned int transform_loc = glGetUniformLocation(program, name);
 	glUniformMatrix4fv(transform_loc, 1, GL_FALSE, mat->matrix);
 }
+
+void set_vector3(unsigned int program, const char* name, struct Vector3 *vec) {
+	glUseProgram(program);
+	unsigned int transform_loc = glGetUniformLocation(program, name);
+	glUniform3f(transform_loc, vec->x, vec->y, vec->z);
+}

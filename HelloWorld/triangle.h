@@ -7,6 +7,7 @@ struct Triangle {
 	unsigned int vao;
 	unsigned int vbo;
 	Matrix4 model;
+	Vector3 pos;
 };
 typedef struct Triangle Triangle;
 
