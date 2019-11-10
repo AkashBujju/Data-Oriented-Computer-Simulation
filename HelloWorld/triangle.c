@@ -43,6 +43,7 @@ void draw_triangle(Triangle *triangle, unsigned int program) {
 	make_identity(&view);
 	make_identity(&projection);
 
+	model = rotate_y(&model, degrees);
 	translate_matrix(&view, 0, 0, -10.0f);
 	projection = perspective(45.0f, 1440 / 900.0f, 0.1f, 100.0f);
 

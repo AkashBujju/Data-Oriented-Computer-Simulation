@@ -69,6 +69,38 @@ Matrix4 rotate_z(Matrix4 *mat, float degree) {
 	return multiply_matrix(mat, &tmp);
 }
 
+Matrix4 rotate_y(Matrix4 *mat, float degree) {
+	float in_radians = degree * 0.0174533f;
+	Matrix4 tmp;
+	make_identity(&tmp);
+
+	float *m1 = mat->matrix;
+	float *m2 = tmp.matrix;
+
+	m2[0] = cos(in_radians);
+	m2[8] = sin(in_radians);
+	m2[2] = -m2[8];
+	m2[10] = m2[0];
+
+	return multiply_matrix(mat, &tmp);
+}
+
+Matrix4 rotate_x(Matrix4 *mat, float degree) {
+	float in_radians = degree * 0.0174533f;
+	Matrix4 tmp;
+	make_identity(&tmp);
+
+	float *m1 = mat->matrix;
+	float *m2 = tmp.matrix;
+
+	m2[5] = cos(in_radians);
+	m2[6] = sin(in_radians);
+	m2[9] = -m2[6];
+	m2[10] = m2[5];
+
+	return multiply_matrix(mat, &tmp);
+}
+
 Matrix4 multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	Matrix4 res;
 	init_matrix(&res);
