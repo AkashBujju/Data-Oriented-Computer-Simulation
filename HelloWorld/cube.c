@@ -5,61 +5,11 @@
 #include "shader.h"
 #include "utils.h"
 
-void make_cuboid(Cuboid *cuboid, int program) {
+void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->program = program;
 
-	float vertices[108];
+	float vertices[180];
 	read_floats_from_file("data\\cube_vertices.dat", vertices);
-
-	// float vertices[] = {
-	// 	// front
-	// 	-1.0f, +1.0f, -1.0f,
-	// 	-1.0f, -1.0f, -1.0f,
-	// 	+1.0f, -1.0f, -1.0f,
-	// 	-1.0f, +1.0f, -1.0f,
-	// 	+1.0f, +1.0f, -1.0f,
-	// 	+1.0f, -1.0f, -1.0f,
-
-	// 	// back
-	// 	-1.0f, +1.0f, +1.0f,
-	// 	-1.0f, -1.0f, +1.0f,
-	// 	+1.0f, -1.0f, +1.0f,
-	// 	-1.0f, +1.0f, +1.0f,
-	// 	+1.0f, +1.0f, +1.0f,
-	// 	+1.0f, -1.0f, +1.0f,
-
-	// 	// top
-	// 	-1.0f, +1.0f, -1.0f,
-	// 	+1.0f, +1.0f, -1.0f,
-	// 	-1.0f, +1.0f, +1.0f,
-	// 	+1.0f, +1.0f, -1.0f,
-	// 	+1.0f, +1.0f, +1.0f,
-	// 	-1.0f, +1.0f, +1.0f,
-
-	// 	//bottom 
-	// 	-1.0f, -1.0f, -1.0f,
-	// 	+1.0f, -1.0f, -1.0f,
-	// 	-1.0f, -1.0f, +1.0f,
-	// 	+1.0f, -1.0f, -1.0f,
-	// 	+1.0f, -1.0f, +1.0f,
-	// 	-1.0f, -1.0f, +1.0f,
-
-	// 	// left
-	// 	-1.0f, -1.0f, -1.0f,
-	// 	-1.0f, +1.0f, -1.0f,
-	// 	-1.0f, -1.0f, +1.0f,
-	// 	-1.0f, +1.0f, -1.0f,
-	// 	-1.0f, +1.0f, +1.0f,
-	// 	-1.0f, -1.0f, +1.0f,
-
-	// 	// right
-	// 	+1.0f, -1.0f, -1.0f,
-	// 	+1.0f, +1.0f, -1.0f,
-	// 	+1.0f, -1.0f, +1.0f,
-	// 	+1.0f, +1.0f, -1.0f,
-	// 	+1.0f, +1.0f, +1.0f,
-	// 	+1.0f, -1.0f, +1.0f
-	// };
 
 	glGenVertexArrays(1, &cuboid->vao);
 	glGenBuffers(1, &cuboid->vbo);
@@ -68,9 +18,13 @@ void make_cuboid(Cuboid *cuboid, int program) {
 	glBindBuffer(GL_ARRAY_BUFFER, cuboid->vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	cuboid->texture_id = make_texture(image);
 	init_matrix(&cuboid->model);
 }
 
@@ -84,9 +38,10 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 	make_identity(&cuboid->model);
 	rotate_z(&cuboid->model, degrees);
 	rotate_x(&cuboid->model, degrees);
-	scale(&cuboid->model, 2.0f, 0, 0);
+	// scale(&cuboid->model, 2.0f, 0, 0);
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
+	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);
 	glBindVertexArray(cuboid->vao);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }

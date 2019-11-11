@@ -10,6 +10,8 @@
 unsigned int window_width = 400;
 unsigned int window_height = 400;
 
+Cuboid cuboid;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -46,12 +48,13 @@ int main(int argc, char** argv) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
+	glEnable(GL_DEPTH_TEST);
+
 	/* tmp */
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
 	// Triangle triangle;
 	// make_triangle(&triangle, shader);
-	Cuboid cuboid;
-	make_cuboid(&cuboid, shader);
+	make_cuboid(&cuboid, shader, "data\\penguin2.png");
 	/* tmp */
 
 	Matrix4 view, projection;
