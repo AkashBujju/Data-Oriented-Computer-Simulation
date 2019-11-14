@@ -32,14 +32,14 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 	glUseProgram(cuboid->program);
 
 	float time = (float)glfwGetTime();
-	static float degrees = 0;
-	degrees = sin(time * 0.2f) * 360;
+	float degrees = sin(time * 0.2f) * 360;
+	float pos = sin(time) * 5.0f;
 
 	make_identity(&cuboid->model);
-	rotate_z(&cuboid->model, degrees);
 	rotate_x(&cuboid->model, degrees);
 	rotate_y(&cuboid->model, degrees);
 	scale(&cuboid->model, 0.5f, 0.5f, 0.5f);
+	translate_matrix(&cuboid->model, pos, 0, 0);
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);

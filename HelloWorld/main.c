@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include "shader.h"
 #include "triangle.h"
 #include "cube.h"
@@ -49,6 +51,7 @@ int main(int argc, char** argv) {
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	glEnable(GL_DEPTH_TEST);
+	glfwSwapInterval(1);
 
 	/* tmp */
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
@@ -63,6 +66,8 @@ int main(int argc, char** argv) {
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 
+		float before = clock();
+
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -76,6 +81,12 @@ int main(int argc, char** argv) {
 		draw_cuboid(&cuboid, &view, &projection);
 
 		glfwSwapBuffers(window);
+
+		float delta = clock() - before;
+		if(delta > 0) {
+			float fps = CLOCKS_PER_SEC / delta;
+			printf("fps: %0.2f\n", fps);
+		}
 		glfwPollEvents();
 	}
 
