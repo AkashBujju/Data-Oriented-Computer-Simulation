@@ -38,7 +38,7 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 	make_identity(&cuboid->model);
 	rotate_x(&cuboid->model, degrees);
 	rotate_y(&cuboid->model, degrees);
-	scale(&cuboid->model, 0.5f, 0.5f, 0.5f);
+	scale(&cuboid->model, 1, 1, 1);
 	translate_matrix(&cuboid->model, pos, 0, 0);
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 

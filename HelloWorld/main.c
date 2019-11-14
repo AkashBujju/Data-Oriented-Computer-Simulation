@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
 	// Triangle triangle;
 	// make_triangle(&triangle, shader);
-	make_cuboid(&cuboid, shader, "data\\penguin2.png");
+	make_cuboid(&cuboid, shader, "data\\grass.png");
 	/* tmp */
 
 	Matrix4 view, projection;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 
 		float before = clock();
 
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		make_identity(&view);
