@@ -22,16 +22,9 @@ void init_vector(Vector3 *vec, float x, float y, float z) {
 
 void scale(Matrix4 *mat, float x, float y, float z) {
 	float *m = mat->matrix;
-	if(x != 0) {
-		m[0] *= x;
-		m[4] *= x;
-	}
-	if(y != 0) {
-		m[1] *= y;
-		m[5] *= y;
-	}
-
-	// @Incomplete: if(z != 0)?
+	m[0] *= x; m[1] *= x; m[2] *= x;
+	m[4] *= y; m[5] *= y; m[6] *= y;
+	m[8] *= z; m[9] *= z; m[10] *= z;
 }
 
 void translateBy_vector(Vector3 *vec, float x, float y, float z) {
@@ -113,13 +106,13 @@ void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 		for(int j = 0; j < 4; ++j)
 			for(int k = 0; k < 4; ++k)
 				r[4 * i + j] += a[4 * i + k] * b[4 * k + j];
-	
+
 	copy_matrix(&res, m1);
 }
 
 Matrix4 perspective(const float fov, const float aspect_ratio, const float z_near, const float z_far) {
 	Matrix4 res;
-	init_matrix(&res);
+	make_identity(&res);
 	float *m = res.matrix;
 	float fov_in_radians = 0.0174533f * fov;
 

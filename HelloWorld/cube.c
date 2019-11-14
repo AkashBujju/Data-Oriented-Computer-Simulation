@@ -38,7 +38,8 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 	make_identity(&cuboid->model);
 	rotate_z(&cuboid->model, degrees);
 	rotate_x(&cuboid->model, degrees);
-	// scale(&cuboid->model, 2.0f, 0, 0);
+	rotate_y(&cuboid->model, degrees);
+	scale(&cuboid->model, 0.5f, 0.5f, 0.5f);
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);

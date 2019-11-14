@@ -58,7 +58,6 @@ int main(int argc, char** argv) {
 	/* tmp */
 
 	Matrix4 view, projection;
-	make_identity(&projection);
 	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
 
 	while (!glfwWindowShouldClose(window)) {
