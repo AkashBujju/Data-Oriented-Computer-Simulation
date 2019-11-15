@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 #include "shader.h"
 #include "triangle.h"
 #include "rect.h"
@@ -12,7 +13,7 @@
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
-
+Matrix4 view;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -65,7 +66,7 @@ int main(int argc, char** argv) {
 	make_rect(&rect, shader, "data\\test.png");
 	/* tmp */
 
-	Matrix4 view, projection;
+	Matrix4 projection;
 	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
 	make_identity(&view);
 	translate_matrix(&view, 0, 0, -10.0f);
@@ -77,6 +78,16 @@ int main(int argc, char** argv) {
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		float radius = 10.0f;
+		float camX = sin(glfwGetTime()) * radius;
+		float camZ = cos(glfwGetTime()) * radius;
+
+		Vector3 position, target, up;
+		init_vector(&position, camX, 0, camZ);
+		init_vector(&target, 0, 0, 0);
+		init_vector(&up, 0, 1, 0);
+		view = look_at(&position, &target, &up);
 
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
@@ -90,7 +101,7 @@ int main(int argc, char** argv) {
 		float delta = clock() - before;
 		if(delta > 0) {
 			float fps = CLOCKS_PER_SEC / delta;
-			printf("fps: %0.2f\n", fps);
+			// printf("fps: %0.2f\n", fps);
 		}
 		glfwPollEvents();
 	}

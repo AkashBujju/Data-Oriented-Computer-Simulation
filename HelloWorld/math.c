@@ -20,6 +20,19 @@ void init_vector(Vector3 *vec, float x, float y, float z) {
 	vec->z = z;
 }
 
+void copy_vector(Vector3 *to, Vector3 *from) {
+	to->x = from->x;
+	to->y = from->y;
+	to->z = from->z;
+}
+
+void normalize_vector(Vector3 *vec) {
+	const float n = 1.0f / sqrt(vec->x * vec->x + vec->y * vec->y + vec->z * vec->z);
+	vec->x *= n;
+	vec->y *= n;
+	vec->z *= n;
+}
+
 void scale(Matrix4 *mat, float x, float y, float z) {
 	float *m = mat->matrix;
 	m[0] *= x; m[1] *= x; m[2] *= x;
@@ -145,6 +158,66 @@ void rotate_about(Matrix4 *mat, Vector3* axes, Vector3* about, float degree) {
 	translateBy_matrix(mat, about->x, about->y, about->z);
 }
 
+Matrix4 look_at(Vector3* position, Vector3* target, Vector3* up) {
+	Matrix4 res;
+	make_identity(&res);
+	float *r = res.matrix;
+
+	Vector3 f, s, u;
+	f = sub(target, position);
+	normalize_vector(&f);
+	s = cross(&f, up);
+	normalize_vector(&s);
+	u = cross(&s, &f);
+
+	r[0] = s.x;
+	r[4] = s.y;
+	r[8] = s.z;
+	r[1] = u.x;
+	r[5] = u.y;
+	r[9] = u.z;
+	r[2] = -f.x;
+	r[6] = -f.y;
+	r[10] = -f.z;
+	r[12] = -dot(&s, position);
+	r[13] = -dot(&u, position);
+	r[14] = dot(&f, position);
+
+	return res;
+}
+
+Vector3 cross(Vector3 *vec1, Vector3 *vec2) {
+	Vector3 res;
+	res.x = vec1->y * vec2->z - vec1->z * vec2->y; 
+	res.y = vec1->z * vec2->x - vec1->x * vec2->z; 
+	res.z = vec1->x * vec2->y - vec1->y * vec2->x;
+
+	return res;
+}
+
+float dot(Vector3 *vec1, Vector3 *vec2) {
+	float res = 0;
+	res += vec1->x * vec2->x;
+	res += vec1->y * vec2->y;
+	res += vec1->z * vec2->z;
+
+	return res;
+}
+
+Vector3 sub(Vector3* vec1, Vector3* vec2) {
+	Vector3 res;
+	init_vector(&res, vec1->x - vec2->x, vec1->y - vec2->y, vec1->z - vec2->z);
+
+	return res;
+}
+
+Vector3 add(Vector3* vec1, Vector3* vec2) {
+	Vector3 res;
+	init_vector(&res, vec1->x + vec2->x, vec1->y + vec2->y, vec1->z + vec2->z);
+
+	return res;
+}
+
 void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	Matrix4 res;
 	init_matrix(&res);
@@ -190,4 +263,8 @@ void print_matrix(Matrix4 *mat) {
 		printf("%.2f ", ptr[i]);
 	}
 	printf("\n\n");
+}
+
+void print_vector(Vector3 *vec) {
+	printf("%.2f %.2f %.2f\n", vec->x, vec->y, vec->z);
 }

@@ -7,7 +7,7 @@
 
 void make_rect(Rect *rect, int program, const char *image) {
 	rect->program = program;
-	float vertices[60];
+	float vertices[180];
 	read_floats_from_file("data\\rect_vertices.dat", vertices);
 
 	glGenVertexArrays(1, &rect->vao);
@@ -31,19 +31,20 @@ void draw_rect(Rect *rect, const Matrix4 *view, const Matrix4* projection) {
 	glUseProgram(rect->program);
 
 	float time = (float)glfwGetTime();
-	float degrees = sin(time) * 30;
+	float degrees = sin(time * 0.5f) * 360;
 
 	make_identity(&rect->model);
 	Vector3 axes;
-	init_vector(&axes, 0, 0, 1);
+	init_vector(&axes, 1, 1, 0);
 
 	Vector3 point;
 	init_vector(&point, 0, 2, -1);
 	scale(&rect->model, 0.5f, 2.0f, 1);
-	rotate_about(&rect->model, &axes, &point, degrees);
+	// rotate_about(&rect->model, &axes, &point, degrees);
+	// rotate(&rect->model, &axes, degrees);
 	set_matrix4(rect->program, "model", &rect->model);
 
 	glBindTexture(GL_TEXTURE_2D, rect->texture_id);
 	glBindVertexArray(rect->vao);
-	glDrawArrays(GL_TRIANGLES, 0, 12);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
