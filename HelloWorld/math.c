@@ -94,6 +94,44 @@ void rotate_x(Matrix4 *mat, float degree) {
 	multiply_matrix(mat, &tmp);
 }
 
+void rotate(Matrix4 *mat, Vector3 axes, float degree) {
+	float in_radians = degree * 0.0174533f;
+	float by_2 = in_radians / 2;
+	Qt q;
+	q.a = cos(by_2);
+	q.x =	axes.x * sin(by_2);
+	q.y = axes.y * sin(by_2);
+	q.z = axes.z * sin(by_2);
+
+	// normalizing
+	const float n = 1.0f / sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.a * q.a);
+	q.a *= n;
+	q.x *= n;
+	q.y *= n;
+	q.z *= n;
+
+	Matrix4 mat2;
+	float *m = mat2.matrix;
+	m[0] = 1 - (2 * q.y * q.y) - (2 * q.z * q.z);
+	m[1] = (2 * q.x * q.y) - (2 * q.z * q.a);
+	m[2] = 2 * q.x * q.z + 2 * q.y * q.a;
+	m[3] = 0;
+	m[4] = 2 * q.x * q.y + 2 * q.z * q.a;
+	m[5] = 1 - 2 * q.x * q.x - 2 * q.z * q.z;
+	m[6] = 2 * q.y * q.z - 2 * q.x * q.a;
+	m[7] = 0;
+	m[8] = 2 * q.x * q.z - 2 * q.y * q.a;
+	m[9] = 2 * q.y * q.z + 2 * q.x * q.a;
+	m[10] = 1 - 2 * q.x * q.x - 2 * q.y * q.y;
+	m[11] = 0;
+	m[12] = 0;
+	m[13] = 0;
+	m[14] = 0;
+	m[15] = 1;
+
+	multiply_matrix(mat, &mat2);
+}
+
 void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	Matrix4 res;
 	init_matrix(&res);

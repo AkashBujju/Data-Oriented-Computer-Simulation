@@ -57,11 +57,13 @@ int main(int argc, char** argv) {
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
 	// Triangle triangle;
 	// make_triangle(&triangle, shader);
-	make_cuboid(&cuboid, shader, "data\\grass.png");
+	make_cuboid(&cuboid, shader, "data\\square.png");
 	/* tmp */
 
 	Matrix4 view, projection;
 	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
+	make_identity(&view);
+	translate_matrix(&view, 0, 0, -10.0f);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -70,9 +72,6 @@ int main(int argc, char** argv) {
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		make_identity(&view);
-		translate_matrix(&view, 0, 0, -10.0f);
 
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
