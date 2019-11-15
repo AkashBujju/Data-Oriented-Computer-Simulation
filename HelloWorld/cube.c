@@ -39,17 +39,11 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 
 	Vector3 axes;
 	axes.x = 1;
-	axes.y = 1;
+	axes.y = 0;
 	axes.z = 0;
-	rotate(&cuboid->model, axes, degrees);
+	rotate(&cuboid->model, &axes, degrees);
 	// scale(&cuboid->model, 0.5f, 2, 1);
 
-	// translate_matrix(&cuboid->model, 0, -1.0f, 0);
-	// rotate_z(&cuboid->model, degrees);
-	// translate_matrix(&cuboid->model, 0, 1.0f, 0);
-	// rotate_x(&cuboid->model, degrees);
-	// rotate_y(&cuboid->model, degrees);
-	// translate_matrix(&cuboid->model, pos, 0, 0);
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);

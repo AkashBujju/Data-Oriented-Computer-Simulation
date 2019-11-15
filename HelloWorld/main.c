@@ -7,12 +7,12 @@
 #include <unistd.h>
 #include "shader.h"
 #include "triangle.h"
+#include "rect.h"
 #include "cube.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
 
-Cuboid cuboid;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -57,7 +57,12 @@ int main(int argc, char** argv) {
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
 	// Triangle triangle;
 	// make_triangle(&triangle, shader);
-	make_cuboid(&cuboid, shader, "data\\square.png");
+
+	// Cuboid cuboid;
+	// make_cuboid(&cuboid, shader, "data\\square.png");
+
+	Rect rect;
+	make_rect(&rect, shader, "data\\test.png");
 	/* tmp */
 
 	Matrix4 view, projection;
@@ -77,7 +82,8 @@ int main(int argc, char** argv) {
 		set_matrix4(shader, "projection", &projection);
 
 		// draw_triangle(&triangle, &view, &projection);
-		draw_cuboid(&cuboid, &view, &projection);
+		// draw_cuboid(&cuboid, &view, &projection);
+		draw_rect(&rect, &view, &projection);
 
 		glfwSwapBuffers(window);
 
@@ -90,7 +96,7 @@ int main(int argc, char** argv) {
 	}
 
 	// delete_triangle(&triangle);
-	delete_cuboid(&cuboid);
+	// delete_cuboid(&cuboid);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 

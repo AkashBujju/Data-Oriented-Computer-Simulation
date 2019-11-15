@@ -46,6 +46,13 @@ void translate_matrix(Matrix4 *mat, float x, float y, float z) {
 	m[14] = z;
 }
 
+void translateBy_matrix(Matrix4 *mat, float x, float y, float z) {
+	float *m = mat->matrix;
+	m[12] += x;
+	m[13] += y;
+	m[14] += z;
+}
+
 void rotate_z(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
@@ -94,14 +101,14 @@ void rotate_x(Matrix4 *mat, float degree) {
 	multiply_matrix(mat, &tmp);
 }
 
-void rotate(Matrix4 *mat, Vector3 axes, float degree) {
+void rotate(Matrix4 *mat, Vector3* axes, float degree) {
 	float in_radians = degree * 0.0174533f;
 	float by_2 = in_radians / 2;
 	Qt q;
 	q.a = cos(by_2);
-	q.x =	axes.x * sin(by_2);
-	q.y = axes.y * sin(by_2);
-	q.z = axes.z * sin(by_2);
+	q.x =	axes->x * sin(by_2);
+	q.y = axes->y * sin(by_2);
+	q.z = axes->z * sin(by_2);
 
 	// normalizing
 	const float n = 1.0f / sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.a * q.a);
@@ -130,6 +137,12 @@ void rotate(Matrix4 *mat, Vector3 axes, float degree) {
 	m[15] = 1;
 
 	multiply_matrix(mat, &mat2);
+}
+
+void rotate_about(Matrix4 *mat, Vector3* axes, Vector3* about, float degree) {
+	translateBy_matrix(mat, -about->x, -about->y, -about->z);
+	rotate(mat, axes, degree);
+	translateBy_matrix(mat, about->x, about->y, about->z);
 }
 
 void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
