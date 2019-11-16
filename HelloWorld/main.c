@@ -15,9 +15,16 @@ unsigned int window_width = 400;
 unsigned int window_height = 400;
 Matrix4 view;
 Vector3 position, up, front;
+int firstMouse = 1;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float lastX, lastY;
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -47,11 +54,18 @@ int main(int argc, char** argv) {
 		printf("Unknown argument %s provided.\n", argv[1]);
 	}
 
+	lastX = window_width / 2.0f;
+	lastY = window_height / 2.0f;
+
 	glfwMaximizeWindow(window);	
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
+	glfwSetKeyCallback(window, key_callback);
+	// glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
 	glfwSwapInterval(1);
 
@@ -69,13 +83,12 @@ int main(int argc, char** argv) {
 	make_identity(&view);
 	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
 
-	init_vector(&front, 0, 0, -1);
-	init_vector(&position, 0, 0, 10);
+	init_vector(&front, -0.49f, -0.56f, -0.67f);
+	init_vector(&position, 36.77f, 42.26, 44.36f);
 	init_vector(&up, 0, 1, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
-
 		float before = clock();
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -106,22 +119,31 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+		print_vector(&position);
+		print_vector(&front);
+	}
+}
+
 void processInput(GLFWwindow *window) {
-	float camera_speed = 0.05f;
+	float camera_speed = 0.5f;
 
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, 1);
-	else if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		position.x += camera_speed * front.x;
-		position.y += camera_speed * front.y;
-		position.z += camera_speed * front.z;
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		// position.x += camera_speed * front.x;
+		// position.y += camera_speed * front.y;
+		// position.z += camera_speed * front.z;
+		position.z -= camera_speed;
 	}
-	else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		position.x -= camera_speed * front.x;
-		position.y -= camera_speed * front.y;
-		position.z -= camera_speed * front.z;
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		// position.x -= camera_speed * front.x;
+		// position.y -= camera_speed * front.y;
+		// position.z -= camera_speed * front.z;
+		position.z += camera_speed;
 	}
-	else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		Vector3 res = cross(&front, &up);
 		normalize_vector(&res);
 
@@ -129,7 +151,7 @@ void processInput(GLFWwindow *window) {
 		position.y -= camera_speed * res.y;
 		position.z -= camera_speed * res.z;
 	}
-	else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		Vector3 res = cross(&front, &up);
 		normalize_vector(&res);
 
@@ -137,6 +159,46 @@ void processInput(GLFWwindow *window) {
 		position.y += camera_speed * res.y;
 		position.z += camera_speed * res.z;
 	}
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (firstMouse) {
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = 0;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f; // change this value to your liking
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	// make sure that when pitch is out of bounds, screen doesn't get flipped
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	front.x = cos(to_radians(yaw)) * cos(to_radians(pitch));
+	front.y = sin(to_radians(pitch));
+	front.z = sin(to_radians(yaw)) * cos(to_radians(pitch));
+	normalize_vector(&front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	printf("y_offset %.2f\n", yoffset);
+
+	float camera_speed = 2.0f;
+	position.x += (camera_speed * front.x) * yoffset;
+	position.y += (camera_speed * front.y) * yoffset;
+	position.z += (camera_speed * front.z) * yoffset;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

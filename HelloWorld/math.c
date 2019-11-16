@@ -66,6 +66,10 @@ void translateBy_matrix(Matrix4 *mat, float x, float y, float z) {
 	m[14] += z;
 }
 
+float to_radians(float degree) {
+	return degree * 0.0174533f;
+}
+
 void rotate_z(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;

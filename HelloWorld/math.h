@@ -23,6 +23,7 @@ typedef struct Qt Qt;
 void init_matrix(Matrix4 *mat);
 void make_identity(Matrix4 *mat);
 void scale(Matrix4 *mat, float x, float y, float z);
+float to_radians(float degree);
 void init_vector(Vector3 *vec, float x, float y, float z);
 void copy_vector(Vector3 *to, Vector3 *from);
 void translateBy_vector(Vector3 *vec, float x, float y, float z);
