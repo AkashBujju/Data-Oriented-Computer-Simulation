@@ -9,7 +9,7 @@ void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->program = program;
 
 	float vertices[180];
-	read_floats_from_file("data\\cube_vertices.dat", vertices);
+	read_floats_from_file("..\\data\\cuboid_vertices.dat", vertices);
 
 	glGenVertexArrays(1, &cuboid->vao);
 	glGenBuffers(1, &cuboid->vbo);

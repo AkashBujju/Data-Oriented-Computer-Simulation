@@ -8,7 +8,7 @@
 #include <math.h>
 #include "shader.h"
 #include "triangle.h"
-#include "rect.h"
+#include "cube_uv.h"
 #include "cube.h"
 
 unsigned int window_width = 400;
@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
@@ -65,18 +66,19 @@ int main(int argc, char** argv) {
 	glfwSetKeyCallback(window, key_callback);
 	// glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_MULTISAMPLE);
 	glfwSwapInterval(1);
 
 	/* tmp */
-	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
-	Rect rect1, rect2;
-	make_rect(&rect1, shader, "data\\test.png");
-	translate_rect(&rect1, 2, 0, 0);
+	int shader = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
+	CuboidUV cuboid_uv_1, cuboid_uv_2;
 
-	make_rect(&rect2, shader, "data\\test.png");
-	translate_rect(&rect2, -2, 0, 0);
+	make_cuboid_uv(&cuboid_uv_1, shader, "..\\data\\test.png");
+	translate_cuboid_uv(&cuboid_uv_1, 2, 0, 0);
+	make_cuboid_uv(&cuboid_uv_2, shader, "..\\data\\test.png");
+	translate_cuboid_uv(&cuboid_uv_2, -2, 0, 0);
 	/* tmp */
 
 	Matrix4 projection;
@@ -99,8 +101,8 @@ int main(int argc, char** argv) {
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
 
-		draw_rect(&rect1, &view, &projection);
-		draw_rect(&rect2, &view, &projection);
+		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
+		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
 
 		glfwSwapBuffers(window);
 
@@ -193,8 +195,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	printf("y_offset %.2f\n", yoffset);
-
 	float camera_speed = 2.0f;
 	position.x += (camera_speed * front.x) * yoffset;
 	position.y += (camera_speed * front.y) * yoffset;
