@@ -218,6 +218,15 @@ Vector3 add(Vector3* vec1, Vector3* vec2) {
 	return res;
 }
 
+Vector3 scalar_mul(Vector3* vec, float val) {
+	Vector3 res;
+	res.x = vec->x * val;
+	res.y = vec->y * val;
+	res.z = vec->z * val;
+
+	return res;
+}
+
 void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	Matrix4 res;
 	init_matrix(&res);

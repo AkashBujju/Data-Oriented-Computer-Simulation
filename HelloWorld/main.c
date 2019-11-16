@@ -14,6 +14,7 @@
 unsigned int window_width = 400;
 unsigned int window_height = 400;
 Matrix4 view;
+Vector3 position, up, front;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -56,20 +57,21 @@ int main(int argc, char** argv) {
 
 	/* tmp */
 	int shader = compile_shader("v_shader.shader", "f_shader.shader");	
-	// Triangle triangle;
-	// make_triangle(&triangle, shader);
+	Rect rect1, rect2;
+	make_rect(&rect1, shader, "data\\test.png");
+	translate_rect(&rect1, 2, 0, 0);
 
-	// Cuboid cuboid;
-	// make_cuboid(&cuboid, shader, "data\\square.png");
-
-	Rect rect;
-	make_rect(&rect, shader, "data\\test.png");
+	make_rect(&rect2, shader, "data\\test.png");
+	translate_rect(&rect2, -2, 0, 0);
 	/* tmp */
 
 	Matrix4 projection;
-	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
 	make_identity(&view);
-	translate_matrix(&view, 0, 0, -10.0f);
+	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
+
+	init_vector(&front, 0, 0, -1);
+	init_vector(&position, 0, 0, 10);
+	init_vector(&up, 0, 1, 0);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -79,22 +81,13 @@ int main(int argc, char** argv) {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		float radius = 10.0f;
-		float camX = sin(glfwGetTime()) * radius;
-		float camZ = cos(glfwGetTime()) * radius;
-
-		Vector3 position, target, up;
-		init_vector(&position, camX, 0, camZ);
-		init_vector(&target, 0, 0, 0);
-		init_vector(&up, 0, 1, 0);
-		view = look_at(&position, &target, &up);
-
+		Vector3 pos_plus_front = add(&position, &front);
+		view = look_at(&position, &pos_plus_front, &up);
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
 
-		// draw_triangle(&triangle, &view, &projection);
-		// draw_cuboid(&cuboid, &view, &projection);
-		draw_rect(&rect, &view, &projection);
+		draw_rect(&rect1, &view, &projection);
+		draw_rect(&rect2, &view, &projection);
 
 		glfwSwapBuffers(window);
 
@@ -106,8 +99,6 @@ int main(int argc, char** argv) {
 		glfwPollEvents();
 	}
 
-	// delete_triangle(&triangle);
-	// delete_cuboid(&cuboid);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
@@ -116,8 +107,36 @@ int main(int argc, char** argv) {
 }
 
 void processInput(GLFWwindow *window) {
+	float camera_speed = 0.05f;
+
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, 1);
+	else if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		position.x += camera_speed * front.x;
+		position.y += camera_speed * front.y;
+		position.z += camera_speed * front.z;
+	}
+	else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		position.x -= camera_speed * front.x;
+		position.y -= camera_speed * front.y;
+		position.z -= camera_speed * front.z;
+	}
+	else if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		Vector3 res = cross(&front, &up);
+		normalize_vector(&res);
+
+		position.x -= camera_speed * res.x;
+		position.y -= camera_speed * res.y;
+		position.z -= camera_speed * res.z;
+	}
+	else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		Vector3 res = cross(&front, &up);
+		normalize_vector(&res);
+
+		position.x += camera_speed * res.x;
+		position.y += camera_speed * res.y;
+		position.z += camera_speed * res.z;
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

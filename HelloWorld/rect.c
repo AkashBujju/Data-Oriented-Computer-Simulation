@@ -25,6 +25,13 @@ void make_rect(Rect *rect, int program, const char *image) {
 
 	rect->texture_id = make_texture(image);
 	init_matrix(&rect->model);
+	init_vector(&rect->pos, 0, 0, 0);
+}
+
+void translate_rect(Rect *rect, float x, float y, float z) {
+	rect->pos.x = x;
+	rect->pos.y = y;
+	rect->pos.z = z;
 }
 
 void draw_rect(Rect *rect, const Matrix4 *view, const Matrix4* projection) {
@@ -39,7 +46,9 @@ void draw_rect(Rect *rect, const Matrix4 *view, const Matrix4* projection) {
 
 	Vector3 point;
 	init_vector(&point, 0, 2, -1);
-	scale(&rect->model, 0.5f, 2.0f, 1);
+	// scale(&rect->model, 0.5f, 2.0f, 1);
+
+	translate_matrix(&rect->model, rect->pos.x, rect->pos.y, rect->pos.z);
 	// rotate_about(&rect->model, &axes, &point, degrees);
 	// rotate(&rect->model, &axes, degrees);
 	set_matrix4(rect->program, "model", &rect->model);

@@ -45,5 +45,6 @@ Vector3 cross(Vector3 *vec1, Vector3 *vec2);
 float dot(Vector3 *vec1, Vector3 *vec2);
 Vector3 sub(Vector3* vec1, Vector3* vec2);
 Vector3 add(Vector3* vec1, Vector3* vec2);
+Vector3 scalar_mul(Vector3* vec, float val);
 
 #endif
