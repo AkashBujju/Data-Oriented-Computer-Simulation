@@ -76,9 +76,9 @@ int main(int argc, char** argv) {
 
 	CuboidUV cuboid_uv_1, cuboid_uv_2;
 	make_cuboid_uv(&cuboid_uv_1, shader, "..\\data\\test.png");
-	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 0);
+	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 1);
 	make_cuboid_uv(&cuboid_uv_2, shader, "..\\data\\test.png");
-	translate_cuboid_uv(&cuboid_uv_2, -2, 1.1f, 0);
+	translate_cuboid_uv(&cuboid_uv_2, -3, 1.1f, -1);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader, "..\\data\\gray.png");
@@ -86,7 +86,9 @@ int main(int argc, char** argv) {
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 
 	Grid grid;
-	make_grid(&grid, 10, 10, 2, 2);
+	make_grid(&grid, 20, 20, 2, 2);
+	translate_grid(&grid, 0, 0, 0.1f);
+	rotate_grid(&grid, 1, 0, 0, 90);
 	/* tmp */
 
 	Matrix4 projection;

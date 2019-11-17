@@ -62,14 +62,41 @@ void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float pe
 	glEnableVertexAttribArray(0);
 
 	init_matrix(&grid->model);
+	init_vector(&grid->position, 0, 0, 0);
+	init_vector(&grid->scale, 1, 1, 1);
+	init_vector(&grid->rotation_axes, 0, 0, 0);
+	init_vector(&grid->color, 1, 1, 1);
 
 	free(vertices);
+}
+
+void translate_grid(Grid* grid, float x, float y, float z) {
+	grid->position.x = x;
+	grid->position.y = y;
+	grid->position.z = z;
+}
+
+void rotate_grid(Grid* grid, float x, float y, float z, float degree) {
+	grid->angle_in_degree = degree;
+	grid->rotation_axes.x = x;
+	grid->rotation_axes.y = y;
+	grid->rotation_axes.z = z;
+}
+
+void scale_grid(Grid* grid, float x, float y, float z) {
+	grid->scale.x = x;
+	grid->scale.y = y;
+	grid->scale.z = z;
 }
 
 void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
 	glUseProgram(grid->program);
 
 	make_identity(&grid->model);
+	translate_matrix(&grid->model, grid->position.x, grid->position.y, grid->position.z);
+	scale(&grid->model, grid->scale.x, grid->scale.y, grid->scale.z);
+	rotate(&grid->model, &grid->rotation_axes, grid->angle_in_degree);
+	set_vector3(grid->program, "aColor", &grid->color);
 	set_matrix4(grid->program, "model", &grid->model);
 	set_matrix4(grid->program, "view", view);
 	set_matrix4(grid->program, "projection", projection);
