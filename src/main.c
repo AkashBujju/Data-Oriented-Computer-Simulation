@@ -10,6 +10,7 @@
 #include "cube_uv.h"
 #include "rectangle.h"
 #include "grid.h"
+#include "line.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -72,16 +73,17 @@ int main(int argc, char** argv) {
 	glfwSwapInterval(1);
 
 	/* tmp */
-	int shader = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
+	int shader1 = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
+	int shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
 
 	CuboidUV cuboid_uv_1, cuboid_uv_2;
-	make_cuboid_uv(&cuboid_uv_1, shader, "..\\data\\test.png");
+	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test.png");
 	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 1);
-	make_cuboid_uv(&cuboid_uv_2, shader, "..\\data\\test.png");
+	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\test.png");
 	translate_cuboid_uv(&cuboid_uv_2, -3, 1.1f, -1);
 
 	Rectangle rect_1;
-	make_rectangle(&rect_1, shader, "..\\data\\gray.png");
+	make_rectangle(&rect_1, shader1, "..\\data\\gray.png");
 	scale_rectangle(&rect_1, 20, 20, 1);
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 
@@ -89,6 +91,12 @@ int main(int argc, char** argv) {
 	make_grid(&grid, 20, 20, 2, 2);
 	translate_grid(&grid, 0, 0, 0.1f);
 	rotate_grid(&grid, 1, 0, 0, 90);
+
+	Line line;
+	Vector3 from, to;
+	init_vector(&from, -10, 1, 0);
+	init_vector(&to, +10, 1, 0);
+	make_line(&line, &from, &to, shader2);
 	/* tmp */
 
 	Matrix4 projection;
@@ -108,13 +116,14 @@ int main(int argc, char** argv) {
 
 		Vector3 pos_plus_front = add(&position, &front);
 		view = look_at(&position, &pos_plus_front, &up);
-		set_matrix4(shader, "view", &view);
-		set_matrix4(shader, "projection", &projection);
+		set_matrix4(shader1, "view", &view);
+		set_matrix4(shader1, "projection", &projection);
 
-		draw_rectangle(&rect_1, &view, &projection);
-		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
-		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
-		draw_grid(&grid, &view, &projection);
+		// draw_rectangle(&rect_1, &view, &projection);
+		// draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
+		// draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
+		// draw_grid(&grid, &view, &projection);
+		draw_line(&line, &view, &projection);
 
 		glfwSwapBuffers(window);
 

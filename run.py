@@ -1,4 +1,4 @@
 import os
 
 os.chdir("bin")
-os.system("main.exe windowed")
+os.system("main.exe fullscreen")
