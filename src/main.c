@@ -7,9 +7,8 @@
 #include <unistd.h>
 #include <math.h>
 #include "shader.h"
-#include "triangle.h"
 #include "cube_uv.h"
-#include "cube.h"
+#include "rectangle.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -79,6 +78,11 @@ int main(int argc, char** argv) {
 	translate_cuboid_uv(&cuboid_uv_1, 2, 0, 0);
 	make_cuboid_uv(&cuboid_uv_2, shader, "..\\data\\test.png");
 	translate_cuboid_uv(&cuboid_uv_2, -2, 0, 0);
+
+	Rectangle rect_1;
+	make_rectangle(&rect_1, shader, "..\\data\\gray.png");
+	scale_rectangle(&rect_1, 20, 20, 1);
+	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 	/* tmp */
 
 	Matrix4 projection;
@@ -93,7 +97,7 @@ int main(int argc, char** argv) {
 		processInput(window);
 		float before = clock();
 
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Vector3 pos_plus_front = add(&position, &front);
@@ -101,6 +105,7 @@ int main(int argc, char** argv) {
 		set_matrix4(shader, "view", &view);
 		set_matrix4(shader, "projection", &projection);
 
+		draw_rectangle(&rect_1, &view, &projection);
 		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
 		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
 

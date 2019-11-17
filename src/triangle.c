@@ -1,7 +1,4 @@
 #include <glad/glad.h>
-#include <stdio.h> // @Tmp
-#include <GLFW/glfw3.h>
-#include <math.h>
 #include "triangle.h"
 #include "shader.h"
 
@@ -30,12 +27,7 @@ void make_triangle(Triangle *triangle, int program) {
 void draw_triangle(Triangle *triangle, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(triangle->program);
 
-	float time = (float)glfwGetTime();
-	static float degrees = 0;
-	degrees = sin(time * 0.2f) * 360;
-
 	make_identity(&triangle->model);
-	rotate_z(&triangle->model, degrees);
 	set_matrix4(triangle->program, "model", &triangle->model);
 
 	glBindVertexArray(triangle->vao);
