@@ -2,19 +2,20 @@
 #include "shader.h"
 #include "rectangle.h"
 #include "utils.h"
+#include <stdlib.h>
 
 void make_rectangle(Rectangle *rectangle, int program, const char* image) {
 	rectangle->program = program;
 
-	float vertices[30];
+	// float vertices[30];
+	float *vertices = (float*)malloc(sizeof(float) * 30);
 	read_floats_from_file("..\\data\\rectangle_vertices.dat", vertices);
 
 	glGenVertexArrays(1, &rectangle->vao);
 	glGenBuffers(1, &rectangle->vbo);
 	glBindVertexArray(rectangle->vao);
-
 	glBindBuffer(GL_ARRAY_BUFFER, rectangle->vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) * 30, vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -27,6 +28,8 @@ void make_rectangle(Rectangle *rectangle, int program, const char* image) {
 	init_vector(&rectangle->position, 0, 0, 0);
 	init_vector(&rectangle->scale, 1, 1, 1);
 	init_vector(&rectangle->rotation_axes, 0, 0, 0);
+
+	free(vertices);
 }
 
 void translate_rectangle(Rectangle *rectangle, float x, float y, float z) {

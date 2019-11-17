@@ -2,8 +2,8 @@
 #include "triangle.h"
 #include "shader.h"
 
-void make_triangle(Triangle *triangle, int program) {
-	triangle->program = program;
+void make_triangle(Triangle *triangle) {
+	triangle->program = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");
 
 	float vertices[] = {
 		-1.0f, -1.0f, +0.0f, // left  
@@ -24,11 +24,13 @@ void make_triangle(Triangle *triangle, int program) {
 	init_matrix(&triangle->model);
 }
 
-void draw_triangle(Triangle *triangle, const Matrix4* view, const Matrix4* projection) {
+void draw_triangle(Triangle *triangle, Matrix4* view, Matrix4* projection) {
 	glUseProgram(triangle->program);
 
 	make_identity(&triangle->model);
 	set_matrix4(triangle->program, "model", &triangle->model);
+	set_matrix4(triangle->program, "view", view);
+	set_matrix4(triangle->program, "projection", projection);
 
 	glBindVertexArray(triangle->vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);

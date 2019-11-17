@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "cube_uv.h"
 #include "rectangle.h"
+#include "grid.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -36,7 +37,7 @@ int main(int argc, char** argv) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, 16); // @Note: What is the recommended value?
 
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
@@ -71,18 +72,21 @@ int main(int argc, char** argv) {
 	glfwSwapInterval(1);
 
 	/* tmp */
-	int shader = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
-	CuboidUV cuboid_uv_1, cuboid_uv_2;
+	int shader = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
 
+	CuboidUV cuboid_uv_1, cuboid_uv_2;
 	make_cuboid_uv(&cuboid_uv_1, shader, "..\\data\\test.png");
-	translate_cuboid_uv(&cuboid_uv_1, 2, 0, 0);
+	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 0);
 	make_cuboid_uv(&cuboid_uv_2, shader, "..\\data\\test.png");
-	translate_cuboid_uv(&cuboid_uv_2, -2, 0, 0);
+	translate_cuboid_uv(&cuboid_uv_2, -2, 1.1f, 0);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader, "..\\data\\gray.png");
 	scale_rectangle(&rect_1, 20, 20, 1);
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
+
+	Grid grid;
+	make_grid(&grid, 10, 10, 2, 2);
 	/* tmp */
 
 	Matrix4 projection;
@@ -108,6 +112,7 @@ int main(int argc, char** argv) {
 		draw_rectangle(&rect_1, &view, &projection);
 		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
 		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
+		draw_grid(&grid, &view, &projection);
 
 		glfwSwapBuffers(window);
 

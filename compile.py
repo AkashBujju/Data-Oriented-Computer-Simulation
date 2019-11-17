@@ -4,7 +4,7 @@ os.system("cls")
 os.chdir("src")
 
 cc = "gcc"
-filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c"
+filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c grid.c"
 external_files = "..\\external\\stb_image.c ..\\external\\glad.c"
 includes = "-I..\\external\\glfw\\include -I..\\external\\glad\\include"
 libs_dirs = "-L..\\external\\glfw\\lib"

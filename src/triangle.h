@@ -11,8 +11,8 @@ struct Triangle {
 };
 typedef struct Triangle Triangle;
 
-void make_triangle(Triangle *triangle, int program);
-void draw_triangle(Triangle *triangle, const Matrix4* view, const Matrix4* projection);
+void make_triangle(Triangle *triangle);
+void draw_triangle(Triangle *triangle, Matrix4* view, Matrix4* projection);
 void delete_triangle(Triangle *triangle);
 
 #endif

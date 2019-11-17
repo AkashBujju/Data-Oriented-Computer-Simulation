@@ -25,13 +25,29 @@ void make_cuboid_uv(CuboidUV *cuboid_uv, int program, const char *image) {
 
 	cuboid_uv->texture_id = make_texture(image);
 	init_matrix(&cuboid_uv->model);
-	init_vector(&cuboid_uv->pos, 0, 0, 0);
+	init_vector(&cuboid_uv->position, 0, 0, 0);
+	init_vector(&cuboid_uv->scale, 1, 1, 1);
+	init_vector(&cuboid_uv->rotation_axes, 0, 0, 0);
+	cuboid_uv->angle_in_degree = 0;
 }
 
 void translate_cuboid_uv(CuboidUV *cuboid_uv, float x, float y, float z) {
-	cuboid_uv->pos.x = x;
-	cuboid_uv->pos.y = y;
-	cuboid_uv->pos.z = z;
+	cuboid_uv->position.x = x;
+	cuboid_uv->position.y = y;
+	cuboid_uv->position.z = z;
+}
+
+void rotate_cuboid_uv(CuboidUV* cuboid_uv, float x, float y, float z, float degree) {
+	cuboid_uv->angle_in_degree = degree;
+	cuboid_uv->rotation_axes.x = x;
+	cuboid_uv->rotation_axes.y = y;
+	cuboid_uv->rotation_axes.z = z;
+}
+
+void scale_cuboid_uv(CuboidUV* cuboid_uv, float x, float y, float z) {
+	cuboid_uv->scale.x = x;
+	cuboid_uv->scale.y = y;
+	cuboid_uv->scale.z = z;
 }
 
 void draw_cuboid_uv(CuboidUV *cuboid_uv, const Matrix4 *view, const Matrix4* projection) {
@@ -41,16 +57,9 @@ void draw_cuboid_uv(CuboidUV *cuboid_uv, const Matrix4 *view, const Matrix4* pro
 	float degrees = sin(time * 0.5f) * 360;
 
 	make_identity(&cuboid_uv->model);
-	Vector3 axes;
-	init_vector(&axes, 1, 1, 0);
-
-	Vector3 point;
-	init_vector(&point, 0, 2, -1);
-	// scale(&cuboid_uv->model, 0.5f, 2.0f, 1);
-
-	translate_matrix(&cuboid_uv->model, cuboid_uv->pos.x, cuboid_uv->pos.y, cuboid_uv->pos.z);
-	// rotate_about(&cuboid_uv->model, &axes, &point, degrees);
-	// rotate(&cuboid_uv->model, &axes, degrees);
+	translate_matrix(&cuboid_uv->model, cuboid_uv->position.x, cuboid_uv->position.y, cuboid_uv->position.z);
+	scale(&cuboid_uv->model, cuboid_uv->scale.x, cuboid_uv->scale.y, cuboid_uv->scale.z);
+	rotate(&cuboid_uv->model, &cuboid_uv->rotation_axes, cuboid_uv->angle_in_degree);
 	set_matrix4(cuboid_uv->program, "model", &cuboid_uv->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid_uv->texture_id);
