@@ -10,7 +10,7 @@ includes = "-I..\\external\\glfw\\include -I..\\external\\glad\\include"
 libs_dirs = "-L..\\external\\glfw\\lib"
 libs = "-lglfw3"
 #args = "-O2 -ffast-math"
-args = ""
+args = "-Wreturn-type"
 output = "-o ..\\bin\\main.exe"
 
 command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output

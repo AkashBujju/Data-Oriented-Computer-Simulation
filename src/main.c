@@ -14,12 +14,14 @@
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
-Matrix4 view;
+Matrix4 view, projection;
 Vector3 position, up, front;
 int firstMouse = 1;
 float yaw = -90.0f;
 float pitch = 0.0f;
 float lastX, lastY;
+Line *line;
+int shader1, shader2;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -75,8 +77,8 @@ int main(int argc, char** argv) {
 	glfwSwapInterval(1);
 
 	/* tmp */
-	int shader1 = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
-	int shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
+	shader1 = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
+	shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
 
 	CuboidUV cuboid_uv_1, cuboid_uv_2;
 	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test.png");
@@ -94,32 +96,14 @@ int main(int argc, char** argv) {
 	translate_grid(&grid, 0, 0, 0.1f);
 	rotate_grid(&grid, 1, 0, 0, 90);
 
-	Line line;
-	Vector3 from, to;
-	init_vector(&from, -10, 1, 0);
-	init_vector(&to, +10, 1, 0);
-	make_line(&line, &from, &to, shader2);
 	/* tmp */
 
-	Matrix4 projection;
 	make_identity(&view);
-	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 100.0f);
+	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 500.0f);
 
 	init_vector(&front, -0.49f, -0.56f, -0.67f);
 	init_vector(&position, 36.77f, 42.26, 44.36f);
 	init_vector(&up, 0, 1, 0);
-
-	/* Matrix inverse test */
-	Matrix4 mat;
-	float *m = mat.matrix;
-	m[0] = 5; m[1] = -2; m[2] = 2; m[3] = 7;
-	m[4] = 1; m[5] = 0; m[6] = 0; m[7] = 3;
-	m[8] = -3; m[9] = 1; m[10] = 5; m[11] = 0;
-	m[12] = 3; m[13] = -1; m[14] = -9; m[15] = 4;
-
-	Matrix4 inv = matrix_inverse(&mat);
-	print_matrix(&inv);
-	/* Matrix inverse test */
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -133,11 +117,13 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "view", &view);
 		set_matrix4(shader1, "projection", &projection);
 
-		// draw_rectangle(&rect_1, &view, &projection);
-		// draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
-		// draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
-		// draw_grid(&grid, &view, &projection);
-		draw_line(&line, &view, &projection);
+		draw_rectangle(&rect_1, &view, &projection);
+		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
+		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
+		draw_grid(&grid, &view, &projection);
+
+		if(line != NULL)
+			draw_line(line, &view, &projection);
 
 		glfwSwapBuffers(window);
 
@@ -167,8 +153,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
+		Vector3 norm = normalize_to(xpos, ypos, window_width, window_height);
+		Vector ray = compute_mouse_ray(norm.x, norm.y, &view, &projection);
+		Vector3 from, to;
+		init_vector(&from, ray.point.x, ray.point.y, ray.point.z);
+		to = scalar_mul(&ray.direction, 100);
+		to = add(&from, &to);
 
-		printf("%.2f  %.2f\n", xpos, ypos);
+		line = (Line*)malloc(sizeof(Line));
+		make_line(line, &from, &to, shader2);
 	}
 }
 

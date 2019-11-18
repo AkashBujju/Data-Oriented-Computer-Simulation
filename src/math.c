@@ -20,6 +20,13 @@ void init_vector(Vector3 *vec, float x, float y, float z) {
 	vec->z = z;
 }
 
+void init_vector4(Vector4 *vec, float x, float y, float z, float a) {
+	vec->x = x;
+	vec->y = y;
+	vec->z = z;
+	vec->a = a;
+}
+
 void copy_vector(Vector3 *to, Vector3 *from) {
 	to->x = from->x;
 	to->y = from->y;
@@ -222,6 +229,20 @@ Vector3 add(Vector3* vec1, Vector3* vec2) {
 	return res;
 }
 
+Vector4 sub4(Vector4* vec1, Vector4* vec2) {
+	Vector4 res;
+	init_vector4(&res, vec1->x - vec2->x, vec1->y - vec2->y, vec1->z - vec2->z, vec1->a - vec2->a);
+	
+	return res;
+}
+
+Vector4 add4(Vector4* vec1, Vector4* vec2) {
+	Vector4 res;
+	init_vector4(&res, vec1->x + vec2->x, vec1->y + vec2->y, vec1->z + vec2->z, vec1->a + vec2->a);
+
+	return res;
+}
+
 Vector3 scalar_mul(Vector3* vec, float val) {
 	Vector3 res;
 	res.x = vec->x * val;
@@ -276,14 +297,10 @@ float matrix_determinant(Matrix4* mat) {
 	float c = m[2];
 	float d = m[3];
 
-	float d1 = a * (m[5] * (m[10] * m[15] - m[11] * m[14]) - m[6] * (m[9] * m[15] - m[11] * m[13])
-		+ m[7] * (m[9] * m[14] - m[10] * m[13]));
-	float d2 = -b * (m[4] * (m[10] * m[15] - m[11] * m[14]) - m[6] * (m[9] * m[15] - m[11] * m[12])
-		+ m[7] * (m[8] * m[14] - m[10] * m[12]));
-	float d3 = c * (m[4] * (m[9] * m[15] - m[11] * m[13]) - m[5] * (m[8] * m[15] - m[11] * m[12])
-		+ m[7] * (m[8] * m[13] - m[9] * m[12]));
-	float d4 = -d * (m[4] * (m[9] * m[14] - m[10] * m[13]) - m[5] * (m[8] * m[14] - m[10] * m[12])
-		+ m[6] * (m[8] * m[13] - m[9] * m[12]));
+	float d1 = +m[0] * (m[5] * m[10] * m[15] + m[6] * m[11] * m[13] + m[7] * m[9] * m[14] - m[7] * m[10] * m[13] - m[6] * m[9] * m[15] - m[5] * m[11] * m[14]);
+	float d2 = -m[4] * (m[1] * m[10] * m[15] + m[2] * m[11] * m[13] + m[3] * m[9] * m[14] - m[3] * m[10] * m[13] - m[2] * m[9] * m[15] - m[1] * m[11] * m[14]);
+	float d3 = +m[8] * (m[1] * m[6] * m[15] + m[2] * m[7] * m[13] + m[3] * m[5] * m[14] - m[3] * m[6] * m[13] - m[2] * m[5] * m[15] - m[1] * m[7] * m[14]);
+	float d4 = -m[12] * (m[1] * m[6] * m[11] + m[2] * m[7] * m[9] + m[3] * m[5] * m[10] - m[3] * m[6] * m[9] - m[2] * m[5] * m[11] - m[1] * m[7] * m[10]);
 
 	det = d1 + d2 + d3 + d4;
 
@@ -331,6 +348,61 @@ Matrix4 matrix_inverse(Matrix4 *mat) {
 		in[i] = ad[i] / det;
 
 	return inv;
+}
+
+Vector3 normalize_to(float x, float y, int width, int height) {
+	Vector3 res;
+	init_vector(&res, x / width * 2 - 1, 1 - y / height * 2, 0);
+
+	return res;
+}
+
+Vector4 mul_vec_and_mat4(Vector4 *vec, Matrix4 *mat) {
+	Vector4 res;
+	float *m = mat->matrix;
+	float x = vec->x, y = vec->y, z = vec->z, w = vec->a;
+
+	res.x = x * m[0] + y * m[4] + z * m[8] + w * m[12];
+	res.y = x * m[1] + y * m[5] + z * m[9] + w * m[13];
+	res.z = x * m[2] + y * m[6] + z * m[10] + w * m[14];
+	res.a = x * m[3] + y * m[7] + z * m[11] + w * m[15];
+
+	return res;
+}
+
+Vector4 mul_mat4_and_vec(Matrix4 *mat, Vector4 *vec) {
+	Vector4 res;
+	float *m = mat->matrix;
+	float x = vec->x, y = vec->y, z = vec->z, w = vec->a;
+
+	res.x = x * m[0] + y * m[1] + z * m[2] + w * m[3];
+	res.y = x * m[4] + y * m[5] + z * m[6] + w * m[7];
+	res.z = x * m[8] + y * m[9] + z * m[10] + w * m[11];
+	res.a = x * m[12] + y * m[13] + z * m[14] + w * m[15];
+
+	return res;
+}
+
+Vector compute_mouse_ray(float norm_x, float norm_y, Matrix4 *view, Matrix4 *projection) {
+	Vector4 clip;
+	init_vector4(&clip, norm_x, norm_y, -1, 1);
+
+	Matrix4 invProj = matrix_inverse(projection);
+	Vector4 eye = mul_vec_and_mat4(&clip, &invProj);
+	eye.z = -1;
+	eye.a = 0;
+
+	Matrix4 invView = matrix_inverse(view);
+	Vector4 world = mul_vec_and_mat4(&eye, &invView);
+	Vector3 ray;
+	init_vector(&ray, world.x, world.y, world.z);
+	normalize_vector(&ray);
+
+	Vector res;
+	init_vector(&res.direction, ray.x, ray.y, ray.z);
+	init_vector(&res.point, invView.matrix[12], invView.matrix[13], invView.matrix[14]);
+
+	return res;
 }
 
 void print_matrix(Matrix4 *mat) {
