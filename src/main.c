@@ -26,6 +26,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -68,6 +69,7 @@ int main(int argc, char** argv) {
 	// glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
 	glfwSwapInterval(1);
@@ -106,6 +108,18 @@ int main(int argc, char** argv) {
 	init_vector(&front, -0.49f, -0.56f, -0.67f);
 	init_vector(&position, 36.77f, 42.26, 44.36f);
 	init_vector(&up, 0, 1, 0);
+
+	/* Matrix inverse test */
+	Matrix4 mat;
+	float *m = mat.matrix;
+	m[0] = 5; m[1] = -2; m[2] = 2; m[3] = 7;
+	m[4] = 1; m[5] = 0; m[6] = 0; m[7] = 3;
+	m[8] = -3; m[9] = 1; m[10] = 5; m[11] = 0;
+	m[12] = 3; m[13] = -1; m[14] = -9; m[15] = 4;
+
+	Matrix4 inv = matrix_inverse(&mat);
+	print_matrix(&inv);
+	/* Matrix inverse test */
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -146,6 +160,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
 		print_vector(&position);
 		print_vector(&front);
+	}
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+
+		printf("%.2f  %.2f\n", xpos, ypos);
 	}
 }
 

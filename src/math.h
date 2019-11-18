@@ -47,5 +47,8 @@ float dot(Vector3 *vec1, Vector3 *vec2);
 Vector3 sub(Vector3* vec1, Vector3* vec2);
 Vector3 add(Vector3* vec1, Vector3* vec2);
 Vector3 scalar_mul(Vector3* vec, float val);
+float matrix_determinant(Matrix4* mat);
+Matrix4 matrix_adjoint(Matrix4 *mat);
+Matrix4 matrix_inverse(Matrix4 *mat);
 
 #endif
