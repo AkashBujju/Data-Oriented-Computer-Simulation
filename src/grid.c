@@ -67,6 +67,12 @@ void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float pe
 	init_vector(&grid->rotation_axes, 0, 0, 0);
 	init_vector(&grid->color, 1, 1, 1);
 
+	const float width_by_2 = grid_width / 2;
+	const float height_by_2 = grid_height / 2;
+	init_vector(&grid->box.top_left, -width_by_2, height_by_2, 0);
+	init_vector(&grid->box.top_right, width_by_2, height_by_2, 0);
+	init_vector(&grid->box.bottom_left, -width_by_2, -height_by_2, 0);
+	init_vector(&grid->box.bottom_right, width_by_2, -height_by_2, 0);
 	free(vertices);
 }
 
@@ -74,6 +80,7 @@ void translate_grid(Grid* grid, float x, float y, float z) {
 	grid->position.x = x;
 	grid->position.y = y;
 	grid->position.z = z;
+	translate_box(&grid->box, x, y, z);
 }
 
 void rotate_grid(Grid* grid, float x, float y, float z, float degree) {
@@ -81,13 +88,31 @@ void rotate_grid(Grid* grid, float x, float y, float z, float degree) {
 	grid->rotation_axes.x = x;
 	grid->rotation_axes.y = y;
 	grid->rotation_axes.z = z;
+	rotate_box(&grid->box, &grid->rotation_axes, degree);
 }
 
-void scale_grid(Grid* grid, float x, float y, float z) {
-	grid->scale.x = x;
-	grid->scale.y = y;
-	grid->scale.z = z;
+void translate_box(Box* box, float x, float y, float z) {
+	float width_by_2 = (box->top_right.x - box->top_left.x) / 2;
+	float height_by_2 = (box->top_right.y - box->bottom_right.y) / 2;
+
+	init_vector(&box->top_left, x - width_by_2, y + width_by_2, z);
+	init_vector(&box->top_right, x + width_by_2, y + width_by_2, z);
+	init_vector(&box->bottom_left, x - width_by_2, y - width_by_2, z);
+	init_vector(&box->bottom_right, x + width_by_2, y - width_by_2, z);
 }
+
+void rotate_box(Box *box, Vector3 *axes, float degree) {
+	box->top_left = rotate_point(&box->top_left, axes, degree);
+	box->top_right = rotate_point(&box->top_right, axes, degree);
+	box->bottom_right = rotate_point(&box->bottom_right, axes, degree);
+	box->bottom_left = rotate_point(&box->bottom_left, axes, degree);
+}
+
+// void scale_grid(Grid* grid, float x, float y, float z) {
+// 	grid->scale.x = x;
+// 	grid->scale.y = y;
+// 	grid->scale.z = z;
+// }
 
 void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
 	glUseProgram(grid->program);

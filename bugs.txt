@@ -1,0 +1,5 @@
+																----------- BUGS ----------
+
+1) The program must be run in fullscreen for ray casting to cast the ray properly. In windowed the end point is shifted a little bit!
+
+																----------- BUGS ----------

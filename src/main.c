@@ -81,9 +81,9 @@ int main(int argc, char** argv) {
 	shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
 
 	CuboidUV cuboid_uv_1, cuboid_uv_2;
-	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test.png");
+	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test_2.png");
 	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 1);
-	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\test.png");
+	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\test_2.png");
 	translate_cuboid_uv(&cuboid_uv_2, -3, 1.1f, -1);
 
 	Rectangle rect_1;
@@ -95,15 +95,15 @@ int main(int argc, char** argv) {
 	make_grid(&grid, 20, 20, 2, 2);
 	translate_grid(&grid, 0, 0, 0.1f);
 	rotate_grid(&grid, 1, 0, 0, 90);
-
 	/* tmp */
 
+	/* init view & projection */
 	make_identity(&view);
 	projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 500.0f);
-
 	init_vector(&front, -0.49f, -0.56f, -0.67f);
 	init_vector(&position, 36.77f, 42.26, 44.36f);
 	init_vector(&up, 0, 1, 0);
+	/* init view & projection */
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -157,7 +157,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		Vector ray = compute_mouse_ray(norm.x, norm.y, &view, &projection);
 		Vector3 from, to;
 		init_vector(&from, ray.point.x, ray.point.y, ray.point.z);
-		to = scalar_mul(&ray.direction, 100);
+		to = scalar_mul(&ray.direction, 200);
 		to = add(&from, &to);
 
 		line = (Line*)malloc(sizeof(Line));

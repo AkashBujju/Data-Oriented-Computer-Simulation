@@ -125,6 +125,36 @@ void rotate_x(Matrix4 *mat, float degree) {
 	multiply_matrix(mat, &tmp);
 }
 
+Vector3 rotate_point(Vector3* p, Vector3* axes, float degree) {
+	Vector3 res;
+	Qt qr, qa;
+
+	qa.a = 0;
+	qa.x = p->x;
+	qa.y = p->y;
+	qa.z = p->z;
+
+	float in_radians = degree * 0.0174533f;
+	float by_2 = in_radians / 2;
+	float _a = cos(by_2);
+	float _x = axes->x * sin(by_2);
+	float _y = axes->y * sin(by_2);
+	float _z = axes->z * sin(by_2);
+
+	qr.a = _a;
+	qr.x = _x;
+	qr.y = _y;
+	qr.z = _z;
+
+	res.x = qa.x * (qr.a * qr.a + qr.x * qr.x - qr.y * qr.y - qr.z * qr.z) + 2 * qa.y * (qr.x * qr.y - qr.a * qr.z) + 2 * qa.z * (qr.a * qr.y + qr.x * qr.z);
+
+	res.y = 2 * qa.x * (qr.a * qr.z + qr.x * qr.y) + qa.y * (qr.a * qr.a - qr.x * qr.x + qr.y * qr.y - qr.z * qr.z) + 2 * qa.z * (qr.y * qr.z - qr.a * qr.x);
+
+	res.z = 2 * qa.x * (qr.x * qr.z - qr.a * qr.y) + 2 * qa.y * (qr.a * qr.x + qr.y * qr.z) + qa.z * (qr.a * qr.a - qr.x * qr.x - qr.y * qr.y + qr.z * qr.z);
+
+	return res;
+}
+
 void rotate(Matrix4 *mat, Vector3* axes, float degree) {
 	float in_radians = degree * 0.0174533f;
 	float by_2 = in_radians / 2;
