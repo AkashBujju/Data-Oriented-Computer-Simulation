@@ -20,8 +20,10 @@ int firstMouse = 1;
 float yaw = -90.0f;
 float pitch = 0.0f;
 float lastX, lastY;
-Line *line;
+Grid grid;
 int shader1, shader2;
+Line lines[50];
+int lines_count;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -29,6 +31,7 @@ void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -91,7 +94,6 @@ int main(int argc, char** argv) {
 	scale_rectangle(&rect_1, 20, 20, 1);
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 
-	Grid grid;
 	make_grid(&grid, 20, 20, 2, 2);
 	translate_grid(&grid, 0, 0, 0.1f);
 	rotate_grid(&grid, 1, 0, 0, 90);
@@ -105,9 +107,11 @@ int main(int argc, char** argv) {
 	init_vector(&up, 0, 1, 0);
 	/* init view & projection */
 
+	lines_count = 0;
+
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
-		float before = clock();
+		// float before = clock();
 
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -122,23 +126,25 @@ int main(int argc, char** argv) {
 		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
 		draw_grid(&grid, &view, &projection);
 
-		if(line != NULL)
-			draw_line(line, &view, &projection);
+		for(int i = 0; i < lines_count; ++i) {
+			draw_line(&lines[i], &view, &projection);
+		}
 
 		glfwSwapBuffers(window);
 
-		float delta = clock() - before;
-		if(delta > 0) {
-			float fps = CLOCKS_PER_SEC / delta;
-			// printf("fps: %0.2f\n", fps);
-		}
+		// float delta = clock() - before;
+		// if(delta > 0) {
+		// 	float fps = CLOCKS_PER_SEC / delta;
+		// 	// printf("fps: %0.2f\n", fps);
+		// }
 		glfwPollEvents();
 	}
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
-	printf("\nEnded.\n");
+	printf("\nlines_count: %d\n", lines_count);
+	printf("Ended.\n");
 	return 0;
 }
 
@@ -160,8 +166,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		to = scalar_mul(&ray.direction, 200);
 		to = add(&from, &to);
 
-		line = (Line*)malloc(sizeof(Line));
-		make_line(line, &from, &to, shader2);
+		add_line(from, to, 0, 1, 0);
+
+		Vector3 plane_point;
+		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
+		if(hit_plane) {
+			printf("point: %.3f %.3f %.3f\n", plane_point.x, plane_point.y, plane_point.z);
+		}
 	}
 }
 
@@ -229,6 +240,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	front.y = sin(to_radians(pitch));
 	front.z = sin(to_radians(yaw)) * cos(to_radians(pitch));
 	normalize_vector(&front);
+}
+
+void add_line(Vector3 start, Vector3 end, float r, float g, float b) {
+	lines_count += 1;
+	int index = lines_count - 1;
+
+	make_line(&lines[index], &start, &end, shader2);
+	init_vector(&lines[index].color, r, g, b);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {

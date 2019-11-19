@@ -6,8 +6,8 @@
 struct CuboidUV {
 	unsigned int vao;
 	unsigned int vbo;
-	int texture_id;
-	int program;
+	unsigned int texture_id;
+	unsigned int program;
 	Matrix4 model;
 	Vector3 position;
 	Vector3 scale;

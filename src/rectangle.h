@@ -7,7 +7,7 @@ struct Rectangle {
 	unsigned int vao;
 	unsigned int vbo;
 	unsigned int texture_id;
-	int program;
+	unsigned int program;
 	Matrix4 model;
 	Vector3 position;
 	Vector3 scale;

@@ -7,7 +7,7 @@
 #include "math.h"
 #include "..\\external\\stb_image.h"
 
-int compile_shader(const char* vertex_file, const char* fragment_file) {
+unsigned int compile_shader(const char* vertex_file, const char* fragment_file) {
 	int success;
 	char info_log[512];
 
@@ -25,7 +25,7 @@ int compile_shader(const char* vertex_file, const char* fragment_file) {
 		return -1;
 	}
 
-	int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	unsigned int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_str, NULL);
 	glCompileShader(vertex_shader);
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
@@ -34,7 +34,7 @@ int compile_shader(const char* vertex_file, const char* fragment_file) {
 		printf("VertexShader error: %s\n", info_log);
 	}
 
-	int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	unsigned int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment_shader, 1, &fragment_str, NULL);
 	glCompileShader(fragment_shader);
 	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
@@ -43,7 +43,7 @@ int compile_shader(const char* vertex_file, const char* fragment_file) {
 		printf("FragmentShader error: %s\n", info_log);
 	}
 
-	int shader_program = glCreateProgram();
+	unsigned int shader_program = glCreateProgram();
 	glAttachShader(shader_program, vertex_shader);
 	glAttachShader(shader_program, fragment_shader);
 	glLinkProgram(shader_program);
@@ -58,9 +58,8 @@ int compile_shader(const char* vertex_file, const char* fragment_file) {
 	return shader_program;
 }
 
-int make_texture(const char* filename) {
-	int texture;
-
+unsigned int make_texture(const char* filename) {
+	unsigned int texture;
 	stbi_set_flip_vertically_on_load(1);
 
 	glGenTextures(1, &texture);

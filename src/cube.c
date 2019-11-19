@@ -31,19 +31,7 @@ void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(cuboid->program);
 
-	float time = (float)glfwGetTime();
-	float degrees = sin(time * 0.7f) * 360;
-	float pos = sin(time) * 5.0f;
-
 	make_identity(&cuboid->model);
-
-	Vector3 axes;
-	axes.x = 1;
-	axes.y = 0;
-	axes.z = 0;
-	rotate(&cuboid->model, &axes, degrees);
-	// scale(&cuboid->model, 0.5f, 2, 1);
-
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);

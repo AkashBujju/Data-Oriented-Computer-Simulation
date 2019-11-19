@@ -53,9 +53,6 @@ void scale_cuboid_uv(CuboidUV* cuboid_uv, float x, float y, float z) {
 void draw_cuboid_uv(CuboidUV *cuboid_uv, const Matrix4 *view, const Matrix4* projection) {
 	glUseProgram(cuboid_uv->program);
 
-	float time = (float)glfwGetTime();
-	float degrees = sin(time * 0.5f) * 360;
-
 	make_identity(&cuboid_uv->model);
 	translate_matrix(&cuboid_uv->model, cuboid_uv->position.x, cuboid_uv->position.y, cuboid_uv->position.z);
 	scale(&cuboid_uv->model, cuboid_uv->scale.x, cuboid_uv->scale.y, cuboid_uv->scale.z);

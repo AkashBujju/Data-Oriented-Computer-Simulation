@@ -6,8 +6,8 @@
 struct Cuboid {
 	unsigned int vao;
 	unsigned int vbo;
-	int texture_id;
-	int program;
+	unsigned int texture_id;
+	unsigned int program;
 	Matrix4 model;
 };
 typedef struct Cuboid Cuboid;

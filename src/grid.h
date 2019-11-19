@@ -3,20 +3,12 @@
 
 #include "math.h"
 
-struct Box {
-	Vector3 top_left;
-	Vector3 top_right;
-	Vector3 bottom_left;
-	Vector3 bottom_right;
-};
-typedef struct Box Box;
-
 struct Grid {
 	unsigned int vao;
 	unsigned int vbo;
-	unsigned int texture_id;
-	unsigned int num_vertices;
+	int texture_id;
 	int program;
+	unsigned int num_vertices;
 	int num_rows, num_cols;
 	float per_width, per_height;
 	Matrix4 model;

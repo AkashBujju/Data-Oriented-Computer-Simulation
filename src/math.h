@@ -34,6 +34,15 @@ struct Qt {
 };
 typedef struct Qt Qt;
 
+struct Box {
+	Vector3 top_left;
+	Vector3 top_right;
+	Vector3 bottom_left;
+	Vector3 bottom_right;
+	Vector3 center;
+};
+typedef struct Box Box;
+
 void init_matrix(Matrix4 *mat);
 void make_identity(Matrix4 *mat);
 void scale(Matrix4 *mat, float x, float y, float z);
@@ -72,5 +81,6 @@ Vector3 normalize_to(float x, float y, int width, int height);
 Vector4 mul_vec_and_mat4(Vector4 *vec, Matrix4 *mat);
 Vector4 mul_mat4_and_vec(Matrix4 *mat, Vector4 *vec);
 Vector compute_mouse_ray(float norm_x, float norm_y, Matrix4 *view, Matrix4 *projection);
+int in_plane_point(Box *box, Vector3 *res, Vector3 *ray_start, Vector3* ray_end);
 
 #endif

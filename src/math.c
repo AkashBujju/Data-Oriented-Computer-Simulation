@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h> // @Tmp
 
+extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
+
 void init_matrix(Matrix4 *mat) {
 	float *m = mat->matrix;
 	memset(m, 0, sizeof(float) * 16);
@@ -81,8 +83,6 @@ void rotate_z(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
-
-	float *m1 = mat->matrix;
 	float *m2 = tmp.matrix;
 
 	m2[0] = cos(in_radians);
@@ -97,8 +97,6 @@ void rotate_y(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
-
-	float *m1 = mat->matrix;
 	float *m2 = tmp.matrix;
 
 	m2[0] = cos(in_radians);
@@ -113,8 +111,6 @@ void rotate_x(Matrix4 *mat, float degree) {
 	float in_radians = degree * 0.0174533f;
 	Matrix4 tmp;
 	make_identity(&tmp);
-
-	float *m1 = mat->matrix;
 	float *m2 = tmp.matrix;
 
 	m2[5] = cos(in_radians);
@@ -322,10 +318,6 @@ inline void copy_matrix(Matrix4 *from, Matrix4 *to) {
 float matrix_determinant(Matrix4* mat) {   
 	float det = 0;
 	float *m = mat->matrix;
-	float a = m[0];
-	float b = m[1];
-	float c = m[2];
-	float d = m[3];
 
 	float d1 = +m[0] * (m[5] * m[10] * m[15] + m[6] * m[11] * m[13] + m[7] * m[9] * m[14] - m[7] * m[10] * m[13] - m[6] * m[9] * m[15] - m[5] * m[11] * m[14]);
 	float d2 = -m[4] * (m[1] * m[10] * m[15] + m[2] * m[11] * m[13] + m[3] * m[9] * m[14] - m[3] * m[10] * m[13] - m[2] * m[9] * m[15] - m[1] * m[11] * m[14]);
@@ -433,6 +425,31 @@ Vector compute_mouse_ray(float norm_x, float norm_y, Matrix4 *view, Matrix4 *pro
 	init_vector(&res.point, invView.matrix[12], invView.matrix[13], invView.matrix[14]);
 
 	return res;
+}
+
+int in_plane_point(Box *box, Vector3 *res, Vector3 *ray_start, Vector3* ray_end) {
+	Vector3 vec_1 = sub(&box->top_right, &box->top_left);
+	Vector3 vec_2 = sub(&box->bottom_left, &box->top_left);
+
+	Vector3 plane_normal = cross(&vec_1, &vec_2);
+	normalize_vector(&plane_normal);
+
+	Vector3 ray_delta = sub(ray_end, ray_start);
+	Vector3 ray_to_plane_delta = sub(&box->center, ray_start);
+
+	float wp = dot(&ray_to_plane_delta, &plane_normal);
+	float vp = dot(&ray_delta, &plane_normal);
+	float k = wp / vp;
+
+	copy_vector(res, &ray_delta);
+	*res = scalar_mul(res, k);
+	scalar_mul(res, k);
+	*res = add(res, ray_start);
+
+	if(k >= 0)
+		return 1;
+	
+	return 0;
 }
 
 void print_matrix(Matrix4 *mat) {
