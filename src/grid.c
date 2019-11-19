@@ -2,6 +2,8 @@
 #include "grid.h"
 #include "shader.h"
 #include <stdlib.h>
+#include <math.h>
+#include <stdio.h> // @Tmp
 
 void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float per_height) {
 	grid->num_rows = num_rows;
@@ -108,6 +110,33 @@ void rotate_box(Box *box, Vector3 *axes, float degree) {
 	box->top_right = rotate_point(&box->top_right, axes, degree);
 	box->bottom_right = rotate_point(&box->bottom_right, axes, degree);
 	box->bottom_left = rotate_point(&box->bottom_left, axes, degree);
+}
+
+int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res) {
+	// @Note: Here we check the 'z' co-ordinate for height, because the grid is rotated on the x-axis.
+	// This won't work if the grid is in some other orientation.
+
+	float p_width = p->x - grid->box.top_left.x;
+	float actual_width = grid->per_width * grid->num_cols;
+	if(p_width < 0 || p_width > actual_width)
+		return 0;
+
+	float x_ratio = p_width / actual_width;
+	unsigned int x_index = ceil(x_ratio * grid->num_cols) - 1;
+
+	float p_height = p->z - grid->box.bottom_left.z;
+	float actual_height = grid->per_height * grid->num_rows;
+	if(p_height < 0 || p_height > actual_height)
+		return 0;
+
+	float z_ratio = p_height / actual_height;
+	unsigned int z_index = ceil(z_ratio * grid->num_rows) - 1;
+
+	res->y = grid->box.center.y;
+	res->x = grid->box.top_left.x + (x_index * grid->per_width) + (grid->per_width / 2);
+	res->z = grid->box.top_left.z - (z_index * grid->per_height) - (grid->per_height / 2);
+
+	return 1;
 }
 
 // void scale_grid(Grid* grid, float x, float y, float z) {

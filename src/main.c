@@ -22,8 +22,11 @@ float pitch = 0.0f;
 float lastX, lastY;
 Grid grid;
 int shader1, shader2;
+
 Line lines[50];
-int lines_count;
+Rectangle rectangles[50];
+static int lines_count;
+static int rectangles_count;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -32,6 +35,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void add_line(Vector3 start, Vector3 end, float r, float g, float b);
+void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, float angle_in_degree, const char* image, int shader);
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -108,6 +112,13 @@ int main(int argc, char** argv) {
 	/* init view & projection */
 
 	lines_count = 0;
+	rectangles_count = 0;
+
+	Vector3 pos, scale, axes;
+	init_vector(&pos, 0, 0, 0.2f);
+	init_vector(&scale, 1, 1, 1);
+	init_vector(&axes, 1, 0, 0);
+	add_rectangle(&pos, &scale, &axes, 90, "..\\data\\red.png", shader1);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -130,6 +141,10 @@ int main(int argc, char** argv) {
 			draw_line(&lines[i], &view, &projection);
 		}
 
+		for(int i = 0; i < rectangles_count; ++i) {
+			draw_rectangle(&rectangles[i], &view, &projection);
+		}
+
 		glfwSwapBuffers(window);
 
 		// float delta = clock() - before;
@@ -144,6 +159,7 @@ int main(int argc, char** argv) {
 	glfwTerminate();
 
 	printf("\nlines_count: %d\n", lines_count);
+	printf("rectangles_count: %d\n", rectangles_count);
 	printf("Ended.\n");
 	return 0;
 }
@@ -165,13 +181,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		init_vector(&from, ray.point.x, ray.point.y, ray.point.z);
 		to = scalar_mul(&ray.direction, 200);
 		to = add(&from, &to);
-
 		add_line(from, to, 0, 1, 0);
 
 		Vector3 plane_point;
 		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
 		if(hit_plane) {
-			printf("point: %.3f %.3f %.3f\n", plane_point.x, plane_point.y, plane_point.z);
+			Vector3 grid_hit_point;
+			int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
+			if(hit_grid) {
+				Vector3 scale, point;
+				init_vector(&scale, 1, 1, 1);
+				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
+				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, "..\\data\\red.png", shader1);
+
+			}
 		}
 	}
 }
@@ -248,6 +271,16 @@ void add_line(Vector3 start, Vector3 end, float r, float g, float b) {
 
 	make_line(&lines[index], &start, &end, shader2);
 	init_vector(&lines[index].color, r, g, b);
+}
+
+void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, float angle_in_degree, const char* image, int shader) {
+	rectangles_count += 1;
+	int index = rectangles_count - 1;
+
+	make_rectangle(&rectangles[index], shader, image);
+	translate_rectangle(&rectangles[index], position->x, position->y, position->z);
+	rotate_rectangle(&rectangles[index], rotation_axes->x, rotation_axes->y, rotation_axes->z, angle_in_degree);
+	scale_rectangle(&rectangles[index], scale->x, scale->y, scale->z);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {

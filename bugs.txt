@@ -1,5 +1,6 @@
 																----------- BUGS ----------
 
 1) The program must be run in fullscreen for ray casting to cast the ray properly. In windowed the end point is shifted a little bit!
+2) When a model is rotated it's local x, y, z axes changes. For example when a model is rotated 90 on the x-axis, the 'y' and the 'z' axis of the model gets interchanged. How to account for this?
 
 																----------- BUGS ----------

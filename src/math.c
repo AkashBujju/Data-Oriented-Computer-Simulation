@@ -443,7 +443,6 @@ int in_plane_point(Box *box, Vector3 *res, Vector3 *ray_start, Vector3* ray_end)
 
 	copy_vector(res, &ray_delta);
 	*res = scalar_mul(res, k);
-	scalar_mul(res, k);
 	*res = add(res, ray_start);
 
 	if(k >= 0)

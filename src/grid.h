@@ -6,8 +6,8 @@
 struct Grid {
 	unsigned int vao;
 	unsigned int vbo;
-	int texture_id;
-	int program;
+	unsigned int texture_id;
+	unsigned int program;
 	unsigned int num_vertices;
 	int num_rows, num_cols;
 	float per_width, per_height;
@@ -27,6 +27,7 @@ void translate_grid(Grid* grid, float x, float y, float z);
 void rotate_grid(Grid* grid, float x, float y, float z, float degree);
 void translate_box(Box* box, float x, float y, float z);
 void rotate_box(Box *box, Vector3 *axes, float degree);
+int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res);
 // void scale_grid(Grid* grid, float x, float y, float z);
 
 #endif
