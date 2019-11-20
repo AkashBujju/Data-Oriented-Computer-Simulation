@@ -11,6 +11,7 @@
 #include "rectangle.h"
 #include "grid.h"
 #include "line.h"
+#include "cube.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -21,13 +22,16 @@ float yaw = -90.0f;
 float pitch = -40.0f;
 float lastX, lastY;
 Grid grid;
+Cuboid cuboid_3;
 int shader1, shader2;
 int show_cursor;
 
-Line lines[50];
-Rectangle rectangles[50];
+static Line lines[50];
+static Rectangle rectangles[50];
+static Cuboid points[50];
 static int lines_count;
 static int rectangles_count;
+static int points_count;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -37,6 +41,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, float angle_in_degree, const char* image, int shader);
+void add_point(float x, float y, float z, const char* image);
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -76,9 +81,7 @@ int main(int argc, char** argv) {
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	glfwSetKeyCallback(window, key_callback);
-	// glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
@@ -88,11 +91,13 @@ int main(int argc, char** argv) {
 	shader1 = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
 	shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
 
-	CuboidUV cuboid_uv_1, cuboid_uv_2;
-	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test_2.png");
-	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 1);
-	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\red.png");
-	translate_cuboid_uv(&cuboid_uv_2, -3, 1.1f, -1);
+	Cuboid cuboid_1, cuboid_2;
+	make_cuboid(&cuboid_1, shader1, "..\\data\\rectangle_red.png");
+	translate_cuboid(&cuboid_1, -5, 1.1f, 1);
+	make_cuboid(&cuboid_2, shader1, "..\\data\\rectangle_blue.png");
+	translate_cuboid(&cuboid_2, 5, 1.1f, 1);
+	make_cuboid(&cuboid_3, shader1, "..\\data\\rectangle_gray.png");
+	translate_cuboid(&cuboid_3, 0, 0, 0);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader1, "..\\data\\gray.png");
@@ -116,6 +121,7 @@ int main(int argc, char** argv) {
 	show_cursor = 1;
 	lines_count = 0;
 	rectangles_count = 0;
+	points_count = 0;
 	/* Init other variables */
 
 	while (!glfwWindowShouldClose(window)) {
@@ -130,18 +136,19 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "view", &view);
 		set_matrix4(shader1, "projection", &projection);
 
-		draw_rectangle(&rect_1, &view, &projection);
-		draw_cuboid_uv(&cuboid_uv_1, &view, &projection);
-		draw_cuboid_uv(&cuboid_uv_2, &view, &projection);
-		draw_grid(&grid, &view, &projection);
+		draw_cuboid(&cuboid_3, &view, &projection);
 
-		for(int i = 0; i < lines_count; ++i) {
+		//draw_rectangle(&rect_1, &view, &projection);
+		//draw_cuboid(&cuboid_1, &view, &projection);
+		//draw_cuboid(&cuboid_2, &view, &projection);
+		//draw_grid(&grid, &view, &projection);
+
+		for(int i = 0; i < lines_count; ++i)
 			draw_line(&lines[i], &view, &projection);
-		}
-
-		for(int i = 0; i < rectangles_count; ++i) {
-			draw_rectangle(&rectangles[i], &view, &projection);
-		}
+		//for(int i = 0; i < rectangles_count; ++i)
+		//	draw_rectangle(&rectangles[i], &view, &projection);
+		for(int i = 0; i < points_count; ++i)
+			draw_cuboid(&points[i], &view, &projection);
 
 		glfwSwapBuffers(window);
 
@@ -189,6 +196,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		to = add(&from, &to);
 		add_line(from, to, 0, 1, 0);
 
+		/* Testing cube_aabb */
+		test_aabb(&cuboid_3, &ray);
+		/* Testing cube_aabb */
+
+		/* Testing grid*/
 		Vector3 plane_point;
 		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
 		if(hit_plane) {
@@ -201,6 +213,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, "..\\data\\red.png", shader1);
 			}
 		}
+		/* Testing grid*/
 	}
 }
 
@@ -209,16 +222,16 @@ void processInput(GLFWwindow *window) {
 
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, 1);
-	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		position.x += camera_speed * front.x;
-		position.y += camera_speed * front.y;
-		position.z += camera_speed * front.z;
-	}
-	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		position.x -= camera_speed * front.x;
-		position.y -= camera_speed * front.y;
-		position.z -= camera_speed * front.z;
-	}
+	// if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+	// 	position.x += camera_speed * front.x;
+	// 	position.y += camera_speed * front.y;
+	// 	position.z += camera_speed * front.z;
+	// }
+	// if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+	// 	position.x -= camera_speed * front.x;
+	// 	position.y -= camera_speed * front.y;
+	// 	position.z -= camera_speed * front.z;
+	// }
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		Vector3 res = cross(&front, &up);
 		normalize_vector(&res);
@@ -235,14 +248,14 @@ void processInput(GLFWwindow *window) {
 		position.y += camera_speed * res.y;
 		position.z += camera_speed * res.z;
 	}
-	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		Vector3 _1 = cross(&front, &up);
 		Vector3 res = cross(&_1, &up);
 		position.x -= camera_speed * res.x;
 		position.y -= camera_speed * res.y;
 		position.z -= camera_speed * res.z;
 	}
-	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 		Vector3 _1 = cross(&front, &up);
 		Vector3 res = cross(&_1, &up);
 		position.x += camera_speed * res.x;
@@ -307,6 +320,19 @@ void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, fl
 	translate_rectangle(&rectangles[index], position->x, position->y, position->z);
 	rotate_rectangle(&rectangles[index], rotation_axes->x, rotation_axes->y, rotation_axes->z, angle_in_degree);
 	scale_rectangle(&rectangles[index], scale->x, scale->y, scale->z);
+}
+
+void add_point(float x, float y, float z, const char* image) {
+	points_count += 1;
+	if(points_count > 50) {
+		printf("No more points to use!!!!!!!!!!\n");
+		return;
+	}
+
+	int index = points_count - 1;
+	make_cuboid(&points[index], shader1, image);
+	scale_cuboid(&points[index], 0.1f, 0.1f, 0.1f);
+	translate_cuboid(&points[index], x, y, z);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
