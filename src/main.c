@@ -18,10 +18,11 @@ Matrix4 view, projection;
 Vector3 position, up, front;
 int firstMouse = 1;
 float yaw = -90.0f;
-float pitch = 0.0f;
+float pitch = -40.0f;
 float lastX, lastY;
 Grid grid;
 int shader1, shader2;
+int show_cursor;
 
 Line lines[50];
 Rectangle rectangles[50];
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
 	CuboidUV cuboid_uv_1, cuboid_uv_2;
 	make_cuboid_uv(&cuboid_uv_1, shader1, "..\\data\\test_2.png");
 	translate_cuboid_uv(&cuboid_uv_1, 5, 1.1f, 1);
-	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\test_2.png");
+	make_cuboid_uv(&cuboid_uv_2, shader1, "..\\data\\red.png");
 	translate_cuboid_uv(&cuboid_uv_2, -3, 1.1f, -1);
 
 	Rectangle rect_1;
@@ -111,14 +112,11 @@ int main(int argc, char** argv) {
 	init_vector(&up, 0, 1, 0);
 	/* init view & projection */
 
+	/* Init other variables */
+	show_cursor = 1;
 	lines_count = 0;
 	rectangles_count = 0;
-
-	Vector3 pos, scale, axes;
-	init_vector(&pos, 0, 0, 0.2f);
-	init_vector(&scale, 1, 1, 1);
-	init_vector(&axes, 1, 0, 0);
-	add_rectangle(&pos, &scale, &axes, 90, "..\\data\\red.png", shader1);
+	/* Init other variables */
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -166,8 +164,16 @@ int main(int argc, char** argv) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
-		print_vector(&position);
-		print_vector(&front);
+		show_cursor = !show_cursor;
+		if(show_cursor) {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			glfwSetCursorPosCallback(window, NULL);
+			firstMouse = 1;
+		}
+		else {
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			glfwSetCursorPosCallback(window, mouse_callback);
+		}
 	}
 }
 
@@ -193,7 +199,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				init_vector(&scale, 1, 1, 1);
 				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
 				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, "..\\data\\red.png", shader1);
-
 			}
 		}
 	}
@@ -205,16 +210,14 @@ void processInput(GLFWwindow *window) {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, 1);
 	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		// position.x += camera_speed * front.x;
-		// position.y += camera_speed * front.y;
-		// position.z += camera_speed * front.z;
-		position.z -= camera_speed;
+		position.x += camera_speed * front.x;
+		position.y += camera_speed * front.y;
+		position.z += camera_speed * front.z;
 	}
 	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		// position.x -= camera_speed * front.x;
-		// position.y -= camera_speed * front.y;
-		// position.z -= camera_speed * front.z;
-		position.z += camera_speed;
+		position.x -= camera_speed * front.x;
+		position.y -= camera_speed * front.y;
+		position.z -= camera_speed * front.z;
 	}
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		Vector3 res = cross(&front, &up);
@@ -228,6 +231,20 @@ void processInput(GLFWwindow *window) {
 		Vector3 res = cross(&front, &up);
 		normalize_vector(&res);
 
+		position.x += camera_speed * res.x;
+		position.y += camera_speed * res.y;
+		position.z += camera_speed * res.z;
+	}
+	if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+		Vector3 _1 = cross(&front, &up);
+		Vector3 res = cross(&_1, &up);
+		position.x -= camera_speed * res.x;
+		position.y -= camera_speed * res.y;
+		position.z -= camera_speed * res.z;
+	}
+	if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		Vector3 _1 = cross(&front, &up);
+		Vector3 res = cross(&_1, &up);
 		position.x += camera_speed * res.x;
 		position.y += camera_speed * res.y;
 		position.z += camera_speed * res.z;
@@ -267,6 +284,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void add_line(Vector3 start, Vector3 end, float r, float g, float b) {
 	lines_count += 1;
+	if(lines_count > 50) {
+		printf("No more lines to use!!!!!!!!!!\n");
+		return;
+	}
 	int index = lines_count - 1;
 
 	make_line(&lines[index], &start, &end, shader2);
@@ -275,6 +296,11 @@ void add_line(Vector3 start, Vector3 end, float r, float g, float b) {
 
 void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, float angle_in_degree, const char* image, int shader) {
 	rectangles_count += 1;
+	if(rectangles_count > 50) {
+		printf("No more rectangles to use!!!!!!!!!!\n");
+		return;
+	}
+
 	int index = rectangles_count - 1;
 
 	make_rectangle(&rectangles[index], shader, image);

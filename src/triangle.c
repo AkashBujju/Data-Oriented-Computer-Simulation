@@ -22,18 +22,25 @@ void make_triangle(Triangle *triangle) {
 	glEnableVertexAttribArray(0);
 
 	init_matrix(&triangle->model);
+	init_vector(&triangle->rotation_axes, 0, 0, 1);
+	init_vector(&triangle->color, 1, 1, 1);
+	triangle->angle_in_degree = 0;
 }
 
 void draw_triangle(Triangle *triangle, Matrix4* view, Matrix4* projection) {
 	glUseProgram(triangle->program);
 
 	make_identity(&triangle->model);
+	set_vector3(triangle->program, "aColor", &triangle->color);
 	set_matrix4(triangle->program, "model", &triangle->model);
 	set_matrix4(triangle->program, "view", view);
 	set_matrix4(triangle->program, "projection", projection);
 
 	glBindVertexArray(triangle->vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void rotate_triangle(Triangle* triangle, Vector3* axes, float angle_in_degree) {
 }
 
 void delete_triangle(Triangle *triangle) {
