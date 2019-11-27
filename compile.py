@@ -12,8 +12,11 @@ if len(sys.argv) != 2:
     sys.exit()
 
 if sys.argv[1] == "gcc":
+    print("gcc ----- Not available for now!!\n")
+    sys.exit()
     cc = "gcc"
-    filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c grid.c line.c"
+    filenames = "*.c"
+    #filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c grid.c line.c"
     external_files = "..\\external\\stb_image.c ..\\external\\glad.c"
     includes = "-I..\\external\\glfw\\mingw\\include -I..\\external\\glad\\include"
     libs_dirs = "-L..\\external\\glfw\\mingw\\lib"
@@ -25,12 +28,12 @@ if sys.argv[1] == "gcc":
     os.system(command)
 elif sys.argv[1] == "vc":
     cc = "cl"
-    filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c grid.c line.c"
+    filenames = "*.cpp"
     external_files = "..\\external\\stb_image.c ..\\external\\glad.c"
-    includes = "/I..\\external\\glfw\\vc\\include /I..\\external\\glad\\include"
-    libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\lib"
-    libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib"
-    args = "/MD"
+    includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include /I..\\external\\easy_profiler\\include"
+    libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
+    libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib easy_profiler.lib"
+    args = "/DBUILD_WITH_EASY_PROFILER /MD"
     output = "/out:..\\bin\\vc\\main.exe"
     command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
     os.system(command)

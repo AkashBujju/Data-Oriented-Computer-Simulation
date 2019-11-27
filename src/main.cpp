@@ -1,5 +1,6 @@
 #include <glad\glad.h>
 #include <GLFW\glfw3.h>
+#include <easy/profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +53,9 @@ int main(int argc, char** argv) {
 		printf("1: windowed\\fullscreen\n");
 		return 0;
 	}
+
+	EASY_PROFILER_ENABLE;
+	EASY_BLOCK("Initialising ...");
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -127,9 +131,13 @@ int main(int argc, char** argv) {
 	points_count = 0;
 	/* Init other variables */
 
+	EASY_END_BLOCK;
+
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		// float before = clock();
+
+		// EASY_FUNCTION(profiler::colors::Red);
 
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -140,7 +148,6 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "projection", &projection);
 
 		draw_cuboid(&cuboid_3, &view, &projection);
-
 		draw_rectangle(&rect_1, &view, &projection);
 		draw_cuboid(&cuboid_1, &view, &projection);
 		draw_cuboid(&cuboid_2, &view, &projection);
@@ -153,7 +160,9 @@ int main(int argc, char** argv) {
 		for(int i = 0; i < points_count; ++i)
 			draw_cuboid(&points[i], &view, &projection);
 
+		EASY_BLOCK("Swap Buffers");
 		glfwSwapBuffers(window);
+		EASY_END_BLOCK;
 
 		// float delta = clock() - before;
 		// if(delta > 0) {
@@ -165,6 +174,8 @@ int main(int argc, char** argv) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
+	profiler::dumpBlocksToFile("..\\..\\profs\\test.prof");
 
 	printf("\nlines_count: %d\n", lines_count);
 	printf("rectangles_count: %d\n", rectangles_count);
