@@ -2,8 +2,11 @@
 #include "triangle.h"
 #include "shader.h"
 
+extern const char* shaders_path;
+extern char* combine_string(const char*, const char*);
+
 void make_triangle(Triangle *triangle) {
-	triangle->program = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");
+	triangle->program = compile_shader(combine_string(shaders_path, "v_shader.shader"), combine_string(shaders_path, "f_shader.shader"));
 
 	float vertices[] = {
 		-1.0f, -1.0f, +0.0f, // left  

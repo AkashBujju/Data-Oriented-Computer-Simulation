@@ -4,12 +4,14 @@
 #include "utils.h"
 #include <stdlib.h>
 
+extern const char* assets_path;
+extern char* combine_string(const char*, const char*);
+
 void make_rectangle(Rectangle *rectangle, int program, const char* image) {
 	rectangle->program = program;
 
-	// float vertices[30];
 	float *vertices = (float*)malloc(sizeof(float) * 30);
-	read_floats_from_file("..\\data\\rectangle_vertices.dat", vertices);
+	read_floats_from_file(combine_string(assets_path, "rectangle_vertices.dat"), vertices);
 
 	glGenVertexArrays(1, &rectangle->vao);
 	glGenBuffers(1, &rectangle->vbo);

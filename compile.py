@@ -22,6 +22,7 @@ if sys.argv[1] == "gcc":
     args = "-Wreturn-type -Wall"
     output = "-o ..\\bin\\gcc\\main.exe"
     command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
+    os.system(command)
 elif sys.argv[1] == "vc":
     cc = "cl"
     filenames = "main.c utils.c shader.c triangle.c cube.c cube_uv.c math.c rectangle.c grid.c line.c"
@@ -32,8 +33,8 @@ elif sys.argv[1] == "vc":
     args = "/MD"
     output = "/out:..\\bin\\vc\\main.exe"
     command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
+    os.system(command)
+    os.system("del *.obj")
 else:
     print("ScriptError: \n ----- " + compiler_not_found_str + "\n")
     sys.exit()
-
-os.system(command)

@@ -5,6 +5,9 @@
 #include <math.h>
 #include <stdio.h> // @Tmp
 
+extern const char* shaders_path;
+extern char* combine_string(const char*, const char*);
+
 void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float per_height) {
 	grid->num_rows = num_rows;
 	grid->num_cols = num_cols;
@@ -53,7 +56,7 @@ void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float pe
 		current_point.x += per_width;
 	}
 
-	grid->program = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");
+	grid->program = compile_shader(combine_string(shaders_path, "v_shader.shader"), combine_string(shaders_path, "f_shader.shader"));
 
 	glGenVertexArrays(1, &grid->vao);
 	glGenBuffers(1, &grid->vbo);

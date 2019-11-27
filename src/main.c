@@ -41,6 +41,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, float angle_in_degree, const char* image, int shader);
 void add_point(float x, float y, float z, const char* image);
+char* combine_string(const char* str_1, const char* str_2);
+
+const char* assets_path = "..\\..\\data\\";
+const char* shaders_path = "..\\..\\shaders\\";
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -87,19 +91,19 @@ int main(int argc, char** argv) {
 	glfwSwapInterval(1);
 
 	/* tmp */
-	shader1 = compile_shader("..\\shaders\\v_shader_with_tex.shader", "..\\shaders\\f_shader_with_tex.shader");	
-	shader2 = compile_shader("..\\shaders\\v_shader.shader", "..\\shaders\\f_shader.shader");	
+	shader1 = compile_shader(combine_string(shaders_path, "v_shader_with_tex.shader"), combine_string(shaders_path, "f_shader_with_tex.shader"));	
+	shader2 = compile_shader(combine_string(shaders_path, "v_shader.shader"), combine_string(shaders_path, "f_shader.shader"));
 
 	Cuboid cuboid_1, cuboid_2;
-	make_cuboid(&cuboid_1, shader1, "..\\data\\rectangle_red.png");
+	make_cuboid(&cuboid_1, shader1, combine_string(assets_path, "rectangle_red.png"));
 	translate_cuboid(&cuboid_1, -5, 1.1f, 1);
-	make_cuboid(&cuboid_2, shader1, "..\\data\\rectangle_blue.png");
+	make_cuboid(&cuboid_2, shader1, combine_string(assets_path, "rectangle_blue.png"));
 	translate_cuboid(&cuboid_2, 5, 1.1f, 1);
-	make_cuboid(&cuboid_3, shader1, "..\\data\\rectangle_gray.png");
+	make_cuboid(&cuboid_3, shader1, combine_string(assets_path, "rectangle_gray.png"));
 	translate_cuboid(&cuboid_3, 0, 0, 0);
 
 	Rectangle rect_1;
-	make_rectangle(&rect_1, shader1, "..\\data\\gray.png");
+	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
 	scale_rectangle(&rect_1, 20, 20, 1);
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 
@@ -137,15 +141,15 @@ int main(int argc, char** argv) {
 
 		draw_cuboid(&cuboid_3, &view, &projection);
 
-		//draw_rectangle(&rect_1, &view, &projection);
-		//draw_cuboid(&cuboid_1, &view, &projection);
-		//draw_cuboid(&cuboid_2, &view, &projection);
-		//draw_grid(&grid, &view, &projection);
+		draw_rectangle(&rect_1, &view, &projection);
+		draw_cuboid(&cuboid_1, &view, &projection);
+		draw_cuboid(&cuboid_2, &view, &projection);
+		draw_grid(&grid, &view, &projection);
 
 		for(int i = 0; i < lines_count; ++i)
 			draw_line(&lines[i], &view, &projection);
-		//for(int i = 0; i < rectangles_count; ++i)
-		//	draw_rectangle(&rectangles[i], &view, &projection);
+		for(int i = 0; i < rectangles_count; ++i)
+			draw_rectangle(&rectangles[i], &view, &projection);
 		for(int i = 0; i < points_count; ++i)
 			draw_cuboid(&points[i], &view, &projection);
 
@@ -196,7 +200,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		add_line(from, to, 0, 1, 0);
 
 		/* Testing cube_aabb */
-		test_aabb(&cuboid_3, &ray);
+		// test_aabb(&cuboid_3, &ray);
 		/* Testing cube_aabb */
 
 		/* Testing grid*/
@@ -209,7 +213,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				Vector3 scale, point;
 				init_vector(&scale, 1, 1, 1);
 				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
-				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, "..\\data\\red.png", shader1);
+				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, combine_string(assets_path, "red.png"), shader1);
 			}
 		}
 		/* Testing grid*/
@@ -343,4 +347,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+}
+
+char* combine_string(const char* str_1, const char* str_2) {
+	unsigned int len = 100;
+	char* str = (char*)malloc(sizeof(char) * len);
+
+	strcpy(str, str_1);
+	strcat(str, str_2);
+
+	return str;
 }

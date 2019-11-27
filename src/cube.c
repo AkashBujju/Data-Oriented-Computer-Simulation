@@ -1,19 +1,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <math.h>
-#include <stdio.h> // @Tmp
 #include "cube.h"
 #include "shader.h"
 #include "utils.h"
 
-// @Tmp
-extern void add_point(float x, float y, float z, const char* image);
+extern const char* assets_path;
+extern char* combine_string(const char*, const char*);
 
 void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->program = program;
 
 	float vertices[180];
-	read_floats_from_file("..\\data\\cuboid_vertices.dat", vertices);
+	read_floats_from_file(combine_string(assets_path, "cuboid_vertices.dat"), vertices);
 
 	glGenVertexArrays(1, &cuboid->vao);
 	glGenBuffers(1, &cuboid->vbo);
@@ -92,7 +91,6 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 	float t_max = (max_x < max_y) ? max_x : max_y;
 
 	if(min_x > max_y || min_y > max_x || t_min > max_z || t_min > t_max) {
-		printf("No.\n");
 		return;
 	}
 
@@ -106,9 +104,6 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 	p1 = add(&from, &p1);
 	p2 = scalar_mul(&ray_dir, t_max);
 	p2 = add(&from, &p2);
-
-	add_point(p1.x, p1.y, p1.z, "..\\data\\rectangle_red.png");
-	add_point(p2.x, p2.y, p2.z, "..\\data\\rectangle_red.png");
 }
 
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
