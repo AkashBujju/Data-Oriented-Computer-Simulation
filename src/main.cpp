@@ -22,7 +22,7 @@ float yaw = -90.0f;
 float pitch = -40.0f;
 float lastX, lastY;
 Grid grid;
-Cuboid cuboid_3;
+Cuboid cuboid_1;
 int shader1, shader2;
 int show_cursor;
 
@@ -46,6 +46,7 @@ char* combine_string(const char* str_1, const char* str_2);
 
 const char* assets_path = "..\\..\\data\\";
 const char* shaders_path = "..\\..\\shaders\\";
+const char* profs_path = "..\\..\\profs\\";
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -98,13 +99,8 @@ int main(int argc, char** argv) {
 	shader1 = compile_shader(combine_string(shaders_path, "v_shader_with_tex.shader"), combine_string(shaders_path, "f_shader_with_tex.shader"));	
 	shader2 = compile_shader(combine_string(shaders_path, "v_shader.shader"), combine_string(shaders_path, "f_shader.shader"));
 
-	Cuboid cuboid_1, cuboid_2;
 	make_cuboid(&cuboid_1, shader1, combine_string(assets_path, "rectangle_red.png"));
-	translate_cuboid(&cuboid_1, -5, 1.1f, 1);
-	make_cuboid(&cuboid_2, shader1, combine_string(assets_path, "rectangle_blue.png"));
-	translate_cuboid(&cuboid_2, 5, 1.1f, 1);
-	make_cuboid(&cuboid_3, shader1, combine_string(assets_path, "rectangle_gray.png"));
-	translate_cuboid(&cuboid_3, 0, 0, 0);
+	translate_cuboid(&cuboid_1, -5, 5, 5);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
@@ -112,7 +108,7 @@ int main(int argc, char** argv) {
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
 
 	make_grid(&grid, 20, 20, 2, 2);
-	translate_grid(&grid, 0, 0, 0.1f);
+	translate_grid(&grid, 0, 0, 0);
 	rotate_grid(&grid, 1, 0, 0, 90);
 	/* tmp */
 
@@ -137,8 +133,6 @@ int main(int argc, char** argv) {
 		processInput(window);
 		// float before = clock();
 
-		// EASY_FUNCTION(profiler::colors::Red);
-
 		glClearColor(0, 0, 0, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -147,16 +141,14 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "view", &view);
 		set_matrix4(shader1, "projection", &projection);
 
-		draw_cuboid(&cuboid_3, &view, &projection);
-		draw_rectangle(&rect_1, &view, &projection);
-		draw_cuboid(&cuboid_1, &view, &projection);
-		draw_cuboid(&cuboid_2, &view, &projection);
+		// draw_rectangle(&rect_1, &view, &projection);
+		// draw_cuboid(&cuboid_1, &view, &projection);
 		draw_grid(&grid, &view, &projection);
 
-		for(int i = 0; i < lines_count; ++i)
-			draw_line(&lines[i], &view, &projection);
-		for(int i = 0; i < rectangles_count; ++i)
-			draw_rectangle(&rectangles[i], &view, &projection);
+		// for(int i = 0; i < lines_count; ++i)
+		// 	draw_line(&lines[i], &view, &projection);
+		// for(int i = 0; i < rectangles_count; ++i)
+		// 	draw_rectangle(&rectangles[i], &view, &projection);
 		for(int i = 0; i < points_count; ++i)
 			draw_cuboid(&points[i], &view, &projection);
 
@@ -175,7 +167,7 @@ int main(int argc, char** argv) {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
-	profiler::dumpBlocksToFile("..\\..\\profs\\test.prof");
+	profiler::dumpBlocksToFile(combine_string(profs_path, "test.prof"));
 
 	printf("\nlines_count: %d\n", lines_count);
 	printf("rectangles_count: %d\n", rectangles_count);
@@ -184,7 +176,7 @@ int main(int argc, char** argv) {
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
 		show_cursor = !show_cursor;
 		if(show_cursor) {
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -195,6 +187,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			glfwSetCursorPosCallback(window, mouse_callback);
 		}
+	}
+	else if (key == GLFW_KEY_O && action == GLFW_PRESS) {
+		translate_grid_by(&grid, 0, 1, 0);
+	}
+	else if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+		translate_grid_by(&grid, 0, -1, 0);
 	}
 }
 
@@ -210,13 +208,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		to = add(&from, &to);
 		add_line(from, to, 0, 1, 0);
 
+		EASY_FUNCTION(profiler::colors::Blue);
 		/* Testing cube_aabb */
-		// test_aabb(&cuboid_3, &ray);
 		/* Testing cube_aabb */
 
+		EASY_BLOCK("grid check");
 		/* Testing grid*/
 		Vector3 plane_point;
 		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
+		add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
 		if(hit_plane) {
 			Vector3 grid_hit_point;
 			int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
@@ -225,9 +225,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				init_vector(&scale, 1, 1, 1);
 				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
 				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, combine_string(assets_path, "red.png"), shader1);
+
+				translate_cuboid(&cuboid_1, grid_hit_point.x, cuboid_1.position.y, grid_hit_point.z);
 			}
 		}
 		/* Testing grid*/
+		EASY_END_BLOCK;
 	}
 }
 

@@ -108,11 +108,21 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(cuboid->program);
-
 	make_identity(&cuboid->model);
+
+	/* Translation & Scaling */
 	translate_matrix(&cuboid->model, cuboid->position.x, cuboid->position.y, cuboid->position.z);
 	scale(&cuboid->model, cuboid->scale.x, cuboid->scale.y, cuboid->scale.z);
+	/* Translation & Scaling */
+
+	/* Rotation */
+	Vector3 tmp;
+	init_vector(&tmp, cuboid->position.x, cuboid->position.y, cuboid->position.z);
+	translate_matrix(&cuboid->model, 0, 0, 0);
 	rotate(&cuboid->model, &cuboid->rotation_axes, cuboid->angle_in_degree);
+	translate_matrix(&cuboid->model, tmp.x, tmp.y, tmp.z);
+	/* Rotation */
+
 	set_matrix4(cuboid->program, "model", &cuboid->model);
 
 	glBindTexture(GL_TEXTURE_2D, cuboid->texture_id);

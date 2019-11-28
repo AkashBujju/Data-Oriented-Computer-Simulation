@@ -88,6 +88,15 @@ void translate_grid(Grid* grid, float x, float y, float z) {
 	translate_box(&grid->box, x, y, z);
 }
 
+void translate_grid_by(Grid* grid, float x, float y, float z) {
+	translateBy_vector(&grid->position, x, y, z);
+	translateBy_vector(&grid->box.center, x, y, z);
+	translateBy_vector(&grid->box.top_left, x, y, z);
+	translateBy_vector(&grid->box.top_right, x, y, z);
+	translateBy_vector(&grid->box.bottom_left, x, y, z);
+	translateBy_vector(&grid->box.bottom_right, x, y, z);
+}
+
 void rotate_grid(Grid* grid, float x, float y, float z, float degree) {
 	grid->angle_in_degree = degree;
 	grid->rotation_axes.x = x;
@@ -154,7 +163,15 @@ void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
 	make_identity(&grid->model);
 	translate_matrix(&grid->model, grid->position.x, grid->position.y, grid->position.z);
 	scale(&grid->model, grid->scale.x, grid->scale.y, grid->scale.z);
+
+	/* Rotation */
+	Vector3 tmp;
+	init_vector(&tmp, grid->position.x, grid->position.y, grid->position.z);
+	translate_matrix(&grid->model, 0, 0, 0);
 	rotate(&grid->model, &grid->rotation_axes, grid->angle_in_degree);
+	translate_matrix(&grid->model, tmp.x, tmp.y, tmp.z);
+	/* Rotation */
+
 	set_vector3(grid->program, "aColor", &grid->color);
 	set_matrix4(grid->program, "model", &grid->model);
 	set_matrix4(grid->program, "view", view);
