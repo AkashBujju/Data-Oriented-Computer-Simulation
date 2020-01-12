@@ -1,0 +1,1 @@
+1) Come up with how the simulation is going to look visually (don't worry about the code).

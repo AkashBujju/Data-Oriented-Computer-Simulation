@@ -22,7 +22,7 @@ float yaw = -90.0f;
 float pitch = -40.0f;
 float lastX, lastY;
 Grid grid;
-Cuboid cuboid_1;
+Cuboid cuboid_1, cuboid_2, cuboid_3;
 int shader1, shader2;
 int show_cursor;
 
@@ -102,6 +102,12 @@ int main(int argc, char** argv) {
 	make_cuboid(&cuboid_1, shader1, combine_string(assets_path, "rectangle_red.png"));
 	translate_cuboid(&cuboid_1, -5, 5, 5);
 
+	make_cuboid(&cuboid_2, shader1, combine_string(assets_path, "rectangle_blue.png"));
+	translate_cuboid(&cuboid_2, 0, +15, 5);
+
+	make_cuboid(&cuboid_3, shader1, combine_string(assets_path, "rectangle_gray.png"));
+	translate_cuboid(&cuboid_3, 5, 5, +10);
+
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
 	scale_rectangle(&rect_1, 20, 20, 1);
@@ -126,7 +132,6 @@ int main(int argc, char** argv) {
 	rectangles_count = 0;
 	points_count = 0;
 	/* Init other variables */
-
 	EASY_END_BLOCK;
 
 	while (!glfwWindowShouldClose(window)) {
@@ -142,11 +147,13 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "projection", &projection);
 
 		// draw_rectangle(&rect_1, &view, &projection);
-		// draw_cuboid(&cuboid_1, &view, &projection);
+		draw_cuboid(&cuboid_1, &view, &projection);
+		draw_cuboid(&cuboid_2, &view, &projection);
+		draw_cuboid(&cuboid_3, &view, &projection);
 		draw_grid(&grid, &view, &projection);
 
-		// for(int i = 0; i < lines_count; ++i)
-		// 	draw_line(&lines[i], &view, &projection);
+		for(int i = 0; i < lines_count; ++i)
+			draw_line(&lines[i], &view, &projection);
 		// for(int i = 0; i < rectangles_count; ++i)
 		// 	draw_rectangle(&rectangles[i], &view, &projection);
 		for(int i = 0; i < points_count; ++i)
@@ -212,25 +219,23 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		/* Testing cube_aabb */
 		/* Testing cube_aabb */
 
-		EASY_BLOCK("grid check");
-		/* Testing grid*/
-		Vector3 plane_point;
-		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
-		add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
-		if(hit_plane) {
-			Vector3 grid_hit_point;
-			int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
-			if(hit_grid) {
-				Vector3 scale, point;
-				init_vector(&scale, 1, 1, 1);
-				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
-				add_rectangle(&point, &scale, &grid.rotation_axes, grid.angle_in_degree, combine_string(assets_path, "red.png"), shader1);
+		// EASY_BLOCK("grid check");
+		// /* Testing grid*/
+		// Vector3 plane_point;
+		// int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
+		// add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
+		// if(hit_plane) {
+		// 	Vector3 grid_hit_point;
+		// 	int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
+		// 	if(hit_grid) {
+		// 		Vector3 scale, point;
+		// 		init_vector(&scale, 1, 1, 1);
+		// 		init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
 
-				translate_cuboid(&cuboid_1, grid_hit_point.x, cuboid_1.position.y, grid_hit_point.z);
-			}
-		}
-		/* Testing grid*/
-		EASY_END_BLOCK;
+		// 	}
+		// }
+		// /* Testing grid*/
+		// EASY_END_BLOCK;
 	}
 }
 
