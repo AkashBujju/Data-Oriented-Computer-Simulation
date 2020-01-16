@@ -1,37 +1,32 @@
-## Welcome to GitHub Pages
+##  Features and Functionality
 
-You can use the [editor on GitHub](https://github.com/AkashBujju/LearningOpenGL-In-C/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
+##  Iteration-1
 ```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+Vehicles				  - Cars, Trucks, Busses
+Buildings 		 	  - Homes(small, medium, large)
+			 		 	      - Factories(small, medium, large)
+			 		 	      - Garbage(landfill, refinary)
+			 		 	      - PowerGenerators(windmill, coal, oil, wiring)
+			 		 	      - SewegeCollection(building, pipes)
+			 		 	      - Parks(small, large)
+			 		 	      - Hospital(small, large)
+			 		    	  - Commercial(small, medium, large)
+People	 		 	    - name, id, workplace, salary, home, happiness
+Homes		 		 	    - people, rent, landvalue, parkingspace, consumes_power
+Factories 		 	  - people, salary, pollution, deploys_trucks, consumes_power
+Garbage	 		 	    - deploys_trucks, people, generates_electricity, pollution,
+						        consumes_power
+PowerGenerators 	- physical_wiring, sound, pollution, megawatts
+SewegeCollection  - physical_pipes, sound, pollution, consumes_power
+Parks					    - trees, people, generates_happiness, clean_env.
+Hospital				  - people, health, consumes_power, ambulance, happiness
+Commercial			  - business, money, goods, trucks
+Roads					    - one_way, two_way, two_lanes
+TrafficLights		  - systematic
+Simulation			  - movement of vehicles
+						      - movement of people(walk, cars, busses)
+						      - income and expenses(homes, factories, commercial)
+						      - pollution(landvalue, airquality)
+						      - employment(jobs, salary, satisfaction)
+						      - todo_queue for all the entities
 ```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/AkashBujju/LearningOpenGL-In-C/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
