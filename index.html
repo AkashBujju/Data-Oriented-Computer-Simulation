@@ -3,9 +3,174 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>Welcome</title>
+		<style>
+#main_heading { text-align:center; color:black; font-family:"Georgia"; border:2px solid; }
+#heading1 { text-align:left; color:black; font-family:"Georgia"; color:red }
+#heading2 { text-align:left; color:black; font-family:"Georgia"; color:red }
+.list_items_1 { color:black; font-family:"Georgia"; font-size:17px; font-weight:bold; list-style-type:disc }
+.list_items_2 { color:black; font-family:"Georgia"; font-size:18px; font-weight:normal; list-style-type:disc }
+.list_style_1 { list-style-type:circle; font-size:16px; font-weight:normal }
+#table_of_contents { color:blue; font-family:"Georgia"; font-size:20px; }
+		</style>
 	</head>
 
 	<body>
-		<h1>Data-oriented Computer Simulation</h1>
+		<h1 id="main_heading">Data-oriented Computer Simulation</h1><br><br>
+
+		<ul>
+			<h3 id="table_of_contents"> - Table of Contents </h3>
+			<ul class="list_items_2">
+				<li><a href="#heading1"> Features and Functionality </a></li><br>
+				<li><a href="#heading2"> High level access patterms </a></li><br>
+			</ul>
+		</ul>
+
+		<hr>
+		<ul>
+			<li>
+				<h3 id="heading1"> Features and Functionality </h3>
+				<ul>
+					<li class="list_items_1">
+						Vehicles				
+						<ul>
+							<li class="list_style_1"> Cars(All cars look the same, with different colors) </li>
+							<li class="list_style_1"> Trucks(All trucks look the same, with different colors)</li> 
+							<li class="list_style_1"> Busses(All busses look the same, with different colors)</li> 
+						</ul>
+					</li>
+					<li class="list_items_1"> Buildings
+						<ul>
+							<li class="list_style_1"> Homes(small, medium, large)(small, medium, large homes
+								will differ visually, with different colors) </li>
+							<li class="list_style_1"> Factories(small, medium, large)(small, medium, large
+								factories will differ visually, with different colors) </li>
+							<li class="list_style_1"> Garbage(landfill, refinary)(landfill and refinary have
+								different visuals, but have a fixed color) </li>
+							<li class="list_style_1"> PowerGenerators(windmill, coal, oil, wiring)(all of them
+								look unique but have fixed visuals) </li>
+							<li class="list_style_1"> SewegeCollection(building, pipes)(fixed visuals and not
+								customisable) </li>
+							<li class="list_style_1"> Parks(small, large)(small and large parks differ in
+								visuals, but cannot be customised) </li>
+							<li class="list_style_1"> Hospital(small, large)(small and large hospitals differ in
+								visuals, but cannot be customised) </li>
+							<li class="list_style_1"> Busstops(static visuals) </li>
+							<li class="list_style_1"> Commercial(small, medium, large)(small, medium and large
+								differ in visuals, all of them can have different colors) </li>
+						</ul>
+					</li>
+					<li class="list_items"> People
+						<ul>
+							<li class="list_style_1"> (made with cubes, different colors, no clothes, minecraft
+								like, health) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Homes
+						<ul>
+							<li class="list_style_1"> (inside of homes are hidden, rent depends on the
+								landvalue, the surroundings, the pollution. small, medium
+								and large homes have different rents and vary in
+								parkingspace area and consume more/less power) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Factories
+						<ul>
+							<li class="list_style_1"> (insides are hidden, generate smoke visuals if possible.
+								pollution depends on the size and number of work hours.
+								salary depends on the educationlevel, number of work
+								hours. trucks have parkingspace, power consumption depends
+								on size and number of work hours. Only qualified people
+								can work in the factory) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Garbage
+						<ul>
+							<li class="list_style_1"> (landfill has some parkingspace for 2-3 trucks, deploys
+								trucks regularly. can get filled 100 percent. landfill
+								dosent generate eletricity. It makes the surrounding less
+								clean. refeneries generate-consume electricity, makes the
+								surrounding polluted. It needs people) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> PowerGenerators
+						<ul>
+							<li class="list_style_1"> (windmill farm, coal-power. power transportation requires
+								physical wiring, cause sound and air pollution. Electricity
+								generated is in megawatts) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Sewege Collection
+						<ul>
+							<li class="list_style_1">(needs physical pipe wiring. consumes power, creates
+								ground pollution, needs people) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Water Supply
+						<ul>
+							<li class="list_style_1"> (needs physical pipe wiring, consumes power) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Parks
+						<ul>
+							<li class="list_style_1"> (has some open space for people to walk around, keeps
+								people happy, makes the surrounding less polluted, is
+								fixed in visuals and not customisable) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Hospital
+						<ul>
+							<li class="list_style_1">(fixed in visuals, can have 2-4 ambulances, restores
+								health, consumes power, makes people happy) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Commercial
+						<ul>
+							<li class="list_style_1">(consumes power, transportation of goods from factories,
+								generates money, needs people, makes people happy, people
+								buy goods) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Roads
+						<ul>
+							<li class="list_style_1"> (Only two lanes(one and two way), road layout mechanism
+								yet to be decided) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> TrafficLights
+						<ul>
+							<li class="list_style_1">(colors: red, green, yellow. Fixed visuals, placement
+								mechanism yet to be decided) </li>
+						</ul>
+					</li>
+					<li class="list_items_1"> Simulation
+						<ul>
+							<li class="list_style_1"> movement of vehicles </li>
+							<li class="list_style_1"> movement of people(walk, cars, busses) </li>
+							<li class="list_style_1"> route planning </li>
+							<li class="list_style_1"> pollution(landvalue, airquality) </li>
+							<li class="list_style_1"> employment(jobs, salary, satisfaction) </li>
+							<li class="list_style_1"> todo_queue for all the entities </li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</ul>
+
+		<hr>
+		<ul>
+			<li class="list_items_1">
+				<h3 id="heading2"> High-level access patterns </h3>
+				<ul>
+					<li class="list_style_1">rendering the static entities(buildings, roads, signs) </li>
+					<li class="list_style_1">rendering of dynamic entities(people, vehicles, particle effects) </li>
+					<li class="list_style_1">movement of vehicles and route planning </li>
+					<li class="list_style_1">updation of income, expenses, pollution, land_value </li>
+					<li class="list_style_1">updation of the todo_queue </li>
+					<li class="list_style_1">updation of flow of resources through the city </li>
+					<li class="list_style_1">some particle systems maybe </li>
+				</ul>
+			</li>
+		</ul>
+
 	</body>
 </html>
