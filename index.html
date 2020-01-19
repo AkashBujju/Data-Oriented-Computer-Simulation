@@ -4,12 +4,15 @@
 		<meta charset="UTF-8">
 		<title>Welcome</title>
 		<style>
+body { background-color:#c0c0c0 }
 #main_heading { text-align:center; color:black; font-family:"Georgia"; border:2px solid; }
 #heading1 { text-align:left; color:black; font-family:"Georgia"; color:red }
 #heading2 { text-align:left; color:black; font-family:"Georgia"; color:red }
+#heading3 { text-align:left; color:black; font-family:"Georgia"; color:red }
 .list_items_1 { color:black; font-family:"Georgia"; font-size:17px; font-weight:bold; list-style-type:disc }
 .list_items_2 { color:black; font-family:"Georgia"; font-size:18px; font-weight:normal; list-style-type:disc }
 .list_style_1 { list-style-type:circle; font-size:16px; font-weight:normal }
+.list_style_2 { list-style-type:square; font-size:16px; font-weight:normal }
 #table_of_contents { color:blue; font-family:"Georgia"; font-size:20px; }
 		</style>
 	</head>
@@ -21,7 +24,8 @@
 			<h3 id="table_of_contents"> - Table of Contents </h3>
 			<ul class="list_items_2">
 				<li><a href="#heading1"> Features and Functionality </a></li><br>
-				<li><a href="#heading2"> High level access patterms </a></li><br>
+				<li><a href="#heading2"> High level access patterns </a></li><br>
+				<li><a href="#heading3"> Things to remember </a></li><br>
 			</ul>
 		</ul>
 
@@ -168,6 +172,23 @@
 					<li class="list_style_1">updation of the todo_queue </li>
 					<li class="list_style_1">updation of flow of resources through the city </li>
 					<li class="list_style_1">some particle systems maybe </li>
+				</ul>
+			</li>
+		</ul>
+
+		<hr>
+		<ul>
+			<li class="list_items_1">
+				<h3 id="heading3"> Things to remember </h3>
+				<ul>
+					<li class="list_style_2"> Try to do it with just C-11, instead of C++. </li>
+					<li class="list_style_2"> (Build the system around / optimize) for the common case. </li>
+					<li class="list_style_2"> Don't update() and render() seperately. </li>
+					<li class="list_style_2"> Try to have linear / predictable access patterns. </li>
+					<li class="list_style_2"> Don't encapsulate the variables. </li>
+					<li class="list_style_2"> Don't rush and create a mess. </li>
+					<li class="list_style_2"> Be constant speed, don't start out fast and then slow down and stop. </li>
+
 				</ul>
 			</li>
 		</ul>
