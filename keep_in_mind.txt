@@ -1,7 +1,0 @@
-* Try to do it with just C-11, instead of C++.
-* (Build the system around / optimize) for the common case.
-* Don't update() and render() seperately.
-* Try to have linear / predictable access patterns.
-* Don't encapsulate the variables.
-* Don't rush and create a mess.
-* Be constant speed, don't start out fast and then slow down and stop.
