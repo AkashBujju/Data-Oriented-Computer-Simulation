@@ -9,16 +9,20 @@ body { background-color:#c0c0c0 }
 #heading1 { text-align:left; color:black; font-family:"Georgia"; color:red }
 #heading2 { text-align:left; color:black; font-family:"Georgia"; color:red }
 #heading3 { text-align:left; color:black; font-family:"Georgia"; color:red }
+#top_style { position:fixed; top:1.5%; left:95%; }
+#bottom_style { position:fixed; top:1.5%; left:85%; }
+#table_of_contents { color:blue; font-family:"Georgia"; font-size:20px; }
 .list_items_1 { color:black; font-family:"Georgia"; font-size:17px; font-weight:bold; list-style-type:disc }
 .list_items_2 { color:black; font-family:"Georgia"; font-size:18px; font-weight:normal; list-style-type:disc }
 .list_style_1 { list-style-type:circle; font-size:16px; font-weight:normal }
 .list_style_2 { list-style-type:square; font-size:16px; font-weight:normal }
-#table_of_contents { color:blue; font-family:"Georgia"; font-size:20px; }
 		</style>
 	</head>
 
 	<body>
-		<h1 id="main_heading">Data-oriented Computer Simulation</h1><br><br>
+		<h1 id="main_heading">Data-oriented Computer Simulation</h1>
+		<h3 id="top_style"><a href="#main_heading">Top</a></h3>
+		<h3 id="bottom_style"><a href="#heading3">Bottom</a></h3><br>
 
 		<ul>
 			<h3 id="table_of_contents"> - Table of Contents </h3>
@@ -188,7 +192,6 @@ body { background-color:#c0c0c0 }
 					<li class="list_style_2"> Don't encapsulate the variables. </li>
 					<li class="list_style_2"> Don't rush and create a mess. </li>
 					<li class="list_style_2"> Be constant speed, don't start out fast and then slow down and stop. </li>
-
 				</ul>
 			</li>
 		</ul>
