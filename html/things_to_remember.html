@@ -11,6 +11,7 @@ body { background-color:#c0c0c0 }
 #heading3 { text-align:left; color:black; font-family:"Georgia"; color:red }
 #top_style { position:fixed; top:1.5%; left:95%; }
 #bottom_style { position:fixed; top:1.5%; left:85%; }
+#back_style { position:absolute; top:1.5%; left:5%; }
 #table_of_contents { color:blue; font-family:"Georgia"; font-size:20px; }
 .list_items_1 { color:black; font-family:"Georgia"; font-size:17px; font-weight:bold; list-style-type:disc }
 .list_items_2 { color:black; font-family:"Georgia"; font-size:18px; font-weight:normal; list-style-type:disc }
@@ -22,16 +23,25 @@ body { background-color:#c0c0c0 }
 	<body>
 		<h1 id="main_heading">Data-oriented Computer Simulation</h1>
 		<h3 id="top_style"><a href="#main_heading">Top</a></h3>
-		<h3 id="bottom_style"><a href="#heading3">Bottom</a></h3><br>
-
+		<h3 id="bottom_style"><a href="#Sims">Bottom</a></h3><br>
+		<h3 id="back_style"> <a href="../index.html"> Back </a></h3><br>
+		
+		<hr>
 		<ul>
-			<h3 id="table_of_contents"> - Table of Contents </h3>
-			<ul class="list_items_2">
-				<li><a href="html/features_and_functionality.html"> Features and Functionality(City Sim.) </a></li><br>
-				<li><a href="html/high_level_access_patterns.html"> High level access patterns </a></li><br>
-				<li><a href="html/things_to_remember.html"> Things to remember </a></li><br>
-			</ul>
+			<li class="list_items_1">
+				<h3 id="heading3"> Things to remember </h3>
+				<ul>
+					<li class="list_style_2"> Try to do it with just C-11, instead of C++. </li>
+					<li class="list_style_2"> (Build the system around / optimize) for the common case. </li>
+					<li class="list_style_2"> Don't update() and render() seperately. </li>
+					<li class="list_style_2"> Try to have linear / predictable access patterns. </li>
+					<li class="list_style_2"> Don't encapsulate the variables. </li>
+					<li class="list_style_2"> Don't rush and create a mess. </li>
+					<li class="list_style_2"> Be constant speed, don't start out fast and then slow down and stop. </li>
+				</ul>
+			</li>
 		</ul>
 
 	</body>
 </html>
+
