@@ -1,6 +1,5 @@
 #include <glad\glad.h>
 #include <GLFW\glfw3.h>
-#include <easy/profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,9 +53,6 @@ int main(int argc, char** argv) {
 		printf("1: windowed\\fullscreen\n");
 		return 0;
 	}
-
-	EASY_PROFILER_ENABLE;
-	EASY_BLOCK("Initialising ...");
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -112,6 +108,7 @@ int main(int argc, char** argv) {
 	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
 	scale_rectangle(&rect_1, 20, 20, 1);
 	rotate_rectangle(&rect_1, 1, 0, 0, 90);
+	translate_rectangle(&rect_1, 0, -0.1f, 0);
 
 	make_grid(&grid, 20, 20, 2, 2);
 	translate_grid(&grid, 0, 0, 0);
@@ -132,7 +129,6 @@ int main(int argc, char** argv) {
 	rectangles_count = 0;
 	points_count = 0;
 	/* Init other variables */
-	EASY_END_BLOCK;
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -146,7 +142,7 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "view", &view);
 		set_matrix4(shader1, "projection", &projection);
 
-		// draw_rectangle(&rect_1, &view, &projection);
+		draw_rectangle(&rect_1, &view, &projection);
 		draw_cuboid(&cuboid_1, &view, &projection);
 		draw_cuboid(&cuboid_2, &view, &projection);
 		draw_cuboid(&cuboid_3, &view, &projection);
@@ -154,14 +150,12 @@ int main(int argc, char** argv) {
 
 		for(int i = 0; i < lines_count; ++i)
 			draw_line(&lines[i], &view, &projection);
-		// for(int i = 0; i < rectangles_count; ++i)
-		// 	draw_rectangle(&rectangles[i], &view, &projection);
+		for(int i = 0; i < rectangles_count; ++i)
+			draw_rectangle(&rectangles[i], &view, &projection);
 		for(int i = 0; i < points_count; ++i)
 			draw_cuboid(&points[i], &view, &projection);
 
-		EASY_BLOCK("Swap Buffers");
 		glfwSwapBuffers(window);
-		EASY_END_BLOCK;
 
 		// float delta = clock() - before;
 		// if(delta > 0) {
@@ -173,8 +167,6 @@ int main(int argc, char** argv) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
-
-	profiler::dumpBlocksToFile(combine_string(profs_path, "test.prof"));
 
 	printf("\nlines_count: %d\n", lines_count);
 	printf("rectangles_count: %d\n", rectangles_count);
@@ -215,27 +207,24 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		to = add(&from, &to);
 		add_line(from, to, 0, 1, 0);
 
-		EASY_FUNCTION(profiler::colors::Blue);
 		/* Testing cube_aabb */
 		/* Testing cube_aabb */
 
-		// EASY_BLOCK("grid check");
 		// /* Testing grid*/
-		// Vector3 plane_point;
-		// int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
-		// add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
-		// if(hit_plane) {
-		// 	Vector3 grid_hit_point;
-		// 	int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
-		// 	if(hit_grid) {
-		// 		Vector3 scale, point;
-		// 		init_vector(&scale, 1, 1, 1);
-		// 		init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
+		Vector3 plane_point;
+		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
+		add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
+		if(hit_plane) {
+			Vector3 grid_hit_point;
+			int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
+			if(hit_grid) {
+				Vector3 scale, point;
+				init_vector(&scale, 1, 1, 1);
+				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
 
-		// 	}
-		// }
-		// /* Testing grid*/
-		// EASY_END_BLOCK;
+			}
+		}
+		/* Testing grid*/
 	}
 }
 

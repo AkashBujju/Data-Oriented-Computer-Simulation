@@ -28,12 +28,15 @@ if sys.argv[1] == "gcc":
     os.system(command)
 elif sys.argv[1] == "vc":
     cc = "cl"
-    filenames = "*.cpp"
+    filenames = "*.c"
     external_files = "..\\external\\stb_image.c ..\\external\\glad.c"
-    includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include /I..\\external\\easy_profiler\\include"
-    libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
-    libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib easy_profiler.lib"
-    args = "/DBUILD_WITH_EASY_PROFILER /MD"
+    # includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include /I..\\external\\easy_profiler\\include"
+    includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include"
+    # libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
+    libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib"
+    libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib"
+    # args = "/DBUILD_WITH_EASY_PROFILER /MD"
+    args = "/MD"
     output = "/out:..\\bin\\vc\\main.exe"
     command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
     os.system(command)

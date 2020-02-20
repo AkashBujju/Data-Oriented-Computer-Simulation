@@ -55,12 +55,21 @@ void rotate_rectangle(Rectangle *rectangle, float x, float y, float z, float deg
 
 void draw_rectangle(Rectangle *rectangle, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(rectangle->program);
-
 	make_identity(&rectangle->model);
+
+	/* Translation & Scaling */
 	translate_matrix(&rectangle->model, rectangle->position.x, rectangle->position.y, rectangle->position.z);
 	scale(&rectangle->model, rectangle->scale.x, rectangle->scale.y, rectangle->scale.z);
+	/* Translation & Scaling */
+
+	/* Rotation */
+	Vector3 tmp;
+	init_vector(&tmp, rectangle->position.x, rectangle->position.y, rectangle->position.z);
+	translate_matrix(&rectangle->model, 0, 0, 0);
 	rotate(&rectangle->model, &rectangle->rotation_axes, rectangle->angle_in_degree);
+	translate_matrix(&rectangle->model, tmp.x, tmp.y, tmp.z);
 	set_matrix4(rectangle->program, "model", &rectangle->model);
+	/* Rotation */
 
 	glBindTexture(GL_TEXTURE_2D, rectangle->texture_id);
 	glBindVertexArray(rectangle->vao);
