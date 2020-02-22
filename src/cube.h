@@ -22,8 +22,8 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 void translate_cuboid(Cuboid *cuboid, float x, float y, float z);
 void rotate_cuboid(Cuboid* cuboid, float x, float y, float z, float degree);
 void scale_cuboid(Cuboid* cuboid, float x, float y, float z);
-void test_aabb(Cuboid *cuboid, Vector *ray);
-void test_obb(Cuboid *cuboid, Vector *ray);
+int test_aabb(Cuboid *cuboid, Vector *ray);
+int test_obb(Cuboid *cuboid, Vector *ray);
 void delete_cuboid(Cuboid *cuboid);
 
 #endif

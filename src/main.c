@@ -102,8 +102,8 @@ int main(int argc, char** argv) {
 	translate_cuboid(&cuboid_2, 0, +15, 5);
 
 	make_cuboid(&cuboid_3, shader1, combine_string(assets_path, "rectangle_gray.png"));
-	// translate_cuboid(&cuboid_3, 5, 5, +10);
-	// rotate_cuboid(&cuboid_3, 1, 1, 1, 45);
+	translate_cuboid(&cuboid_3, 5, 5, +10);
+	rotate_cuboid(&cuboid_3, 1, 1, 1, 45);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
@@ -209,8 +209,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		add_line(from, to, 0, 1, 0);
 
 		/* Testing cube_obb */
-		test_obb(&cuboid_3, &ray);
-		test_aabb(&cuboid_3, &ray);
+		printf("Hit: %d\n", test_obb(&cuboid_3, &ray));
+		// test_aabb(&cuboid_3, &ray);
 		/* Testing cube_obb */
 
 		/* Testing grid*/

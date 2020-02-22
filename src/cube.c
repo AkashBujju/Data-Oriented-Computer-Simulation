@@ -8,8 +8,8 @@
 
 extern const char* assets_path;
 extern char* combine_string(const char*, const char*);
-extern void add_point(float x, float y, float z, const char* image);
-extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
+// extern void add_point(float x, float y, float z, const char* image);
+// extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 
 void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->program = program;
@@ -63,7 +63,7 @@ void scale_cuboid(Cuboid* cuboid, float x, float y, float z) {
 	cuboid->depth = 2 * z;
 }
 
-void test_obb(Cuboid *cuboid, Vector *ray) {
+int test_obb(Cuboid *cuboid, Vector *ray) {
 	Vector3 right, up, forward;
 
 	float *matrix = cuboid->model.matrix;
@@ -72,7 +72,6 @@ void test_obb(Cuboid *cuboid, Vector *ray) {
 	init_vector(&forward, matrix[8], matrix[9], matrix[10]);
 
 	Vector3 bb_ray_delta = sub(&cuboid->position, &ray->point);
-	add_line(cuboid->position, ray->point, 1, 1, 0);
 
 	Vector3 min_bound, max_bound;
 	float width_by_2 = cuboid->width / 2;
@@ -81,7 +80,7 @@ void test_obb(Cuboid *cuboid, Vector *ray) {
 	init_vector(&min_bound, -width_by_2, -height_by_2, -depth_by_2);
 	init_vector(&max_bound, width_by_2, height_by_2, depth_by_2);
 
-	float t_min, t_max;
+	float t_min = 0, t_max = 1000000;
 	// x-axis
 	{
 		float nom_len = dot(&right, &bb_ray_delta);
@@ -102,12 +101,12 @@ void test_obb(Cuboid *cuboid, Vector *ray) {
 			}
 
 			if(t_max < t_min) {
-				return;
+				return 0;
 			}
 		}
 		else {
 			if((-nom_len + min_bound.x) > 0 || (-nom_len + max_bound.x) < 0) {
-				return;
+				return 0;
 			}
 		}
 	}
@@ -132,12 +131,12 @@ void test_obb(Cuboid *cuboid, Vector *ray) {
 			}
 
 			if(t_max < t_min) {
-				return;
+				return 0;
 			}
 		}
 		else {
 			if((-nom_len + min_bound.y) > 0 || (-nom_len + max_bound.y) < 0) {
-				return;
+				return 0;
 			}
 		}
 	}
@@ -162,26 +161,28 @@ void test_obb(Cuboid *cuboid, Vector *ray) {
 			}
 
 			if(t_max < t_min) {
-				return;
+				return 0;
 			}
 		}
 		else {
 			if((-nom_len + min_bound.z) > 0 || (-nom_len + max_bound.z) < 0) {
-				return;
+				return 0;
 			}
 		}
 	}
 
-	Vector3 tmp_point_1, tmp_point_2;
-	tmp_point_1 = scalar_mul(&ray->direction, t_min);
-	tmp_point_1 = add(&tmp_point_1, &ray->point);
-	tmp_point_2 = scalar_mul(&ray->direction, t_max);
-	tmp_point_2 = add(&tmp_point_2, &ray->point);
-	add_point(tmp_point_1.x, tmp_point_1.y, tmp_point_1.z, combine_string(assets_path, "rectangle_red.png"));
-	add_point(tmp_point_2.x, tmp_point_2.y, tmp_point_2.z, combine_string(assets_path, "rectangle_blue.png"));
+	// Vector3 tmp_point_1, tmp_point_2;
+	// tmp_point_1 = scalar_mul(&ray->direction, t_min);
+	// tmp_point_1 = add(&tmp_point_1, &ray->point);
+	// tmp_point_2 = scalar_mul(&ray->direction, t_max);
+	// tmp_point_2 = add(&tmp_point_2, &ray->point);
+	// add_point(tmp_point_1.x, tmp_point_1.y, tmp_point_1.z, combine_string(assets_path, "rectangle_red.png"));
+	// add_point(tmp_point_2.x, tmp_point_2.y, tmp_point_2.z, combine_string(assets_path, "rectangle_blue.png"));
+	
+	return 1;
 }
 
-void test_aabb(Cuboid *cuboid, Vector *ray) {
+int test_aabb(Cuboid *cuboid, Vector *ray) {
 	Vector3 from, to;
 	init_vector(&from, ray->point.x, ray->point.y, ray->point.z);
 	to = scalar_mul(&ray->direction, 200);
@@ -213,7 +214,7 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 	float t_max = (max_x < max_y) ? max_x : max_y;
 
 	if(min_x > max_y || min_y > max_x || t_min > max_z || t_min > t_max) {
-		return;
+		return 0;
 	}
 
 	if(min_z > t_min)
@@ -229,6 +230,8 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 
 	// add_point(p1.x, p1.y, p1.z, combine_string(assets_path, "rectangle_red.png"));
 	// add_point(p2.x, p2.y, p2.z, combine_string(assets_path, "rectangle_red.png"));
+	
+	return 1;
 }
 
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
