@@ -3,7 +3,19 @@
 #include <string.h>
 #include <stdio.h> // @Tmp
 
-extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
+float f_max(float f1, float f2) {
+	if (f1 > f2)
+		return f1;
+
+	return f2;
+}
+
+float f_min(float f1, float f2) {
+	if (f1 < f2)
+		return f1;
+
+	return f2;
+}
 
 void init_matrix(Matrix4 *mat) {
 	float *m = mat->matrix;

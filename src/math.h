@@ -74,6 +74,8 @@ Vector3 add(Vector3* vec1, Vector3* vec2);
 Vector4 sub4(Vector4* vec1, Vector4* vec2);
 Vector4 add4(Vector4* vec1, Vector4* vec2);
 Vector3 scalar_mul(Vector3* vec, float val);
+float f_max(float f1, float f2);
+float f_min(float f1, float f2);
 float matrix_determinant(Matrix4* mat);
 Matrix4 matrix_adjoint(Matrix4 *mat);
 Matrix4 matrix_inverse(Matrix4 *mat);

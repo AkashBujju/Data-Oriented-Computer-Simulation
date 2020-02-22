@@ -146,16 +146,10 @@ int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res) {
 
 	res->y = grid->box.center.y;
 	res->x = grid->box.top_left.x + (x_index * grid->per_width) + (grid->per_width / 2);
-	res->z = grid->box.top_left.z - (z_index * grid->per_height) - (grid->per_height / 2);
+	res->z = (z_index * grid->per_height) + (grid->per_height / 2) - grid->box.top_left.z;
 
 	return 1;
 }
-
-// void scale_grid(Grid* grid, float x, float y, float z) {
-// 	grid->scale.x = x;
-// 	grid->scale.y = y;
-// 	grid->scale.z = z;
-// }
 
 void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
 	glUseProgram(grid->program);

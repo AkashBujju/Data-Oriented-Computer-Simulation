@@ -52,12 +52,21 @@ void scale_cuboid_uv(CuboidUV* cuboid_uv, float x, float y, float z) {
 
 void draw_cuboid_uv(CuboidUV *cuboid_uv, const Matrix4 *view, const Matrix4* projection) {
 	glUseProgram(cuboid_uv->program);
-
 	make_identity(&cuboid_uv->model);
+
+	/* Translation & Scaling */
 	translate_matrix(&cuboid_uv->model, cuboid_uv->position.x, cuboid_uv->position.y, cuboid_uv->position.z);
 	scale(&cuboid_uv->model, cuboid_uv->scale.x, cuboid_uv->scale.y, cuboid_uv->scale.z);
+	/* Translation & Scaling */
+
+	/* Rotation */
+	Vector3 tmp;
+	init_vector(&tmp, cuboid_uv->position.x, cuboid_uv->position.y, cuboid_uv->position.z);
+	translate_matrix(&cuboid_uv->model, 0, 0, 0);
 	rotate(&cuboid_uv->model, &cuboid_uv->rotation_axes, cuboid_uv->angle_in_degree);
+	translate_matrix(&cuboid_uv->model, tmp.x, tmp.y, tmp.z);
 	set_matrix4(cuboid_uv->program, "model", &cuboid_uv->model);
+	/* Rotation */
 
 	glBindTexture(GL_TEXTURE_2D, cuboid_uv->texture_id);
 	glBindVertexArray(cuboid_uv->vao);

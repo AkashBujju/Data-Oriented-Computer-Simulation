@@ -4,9 +4,12 @@
 #include "cube.h"
 #include "shader.h"
 #include "utils.h"
+#include "math.h"
 
 extern const char* assets_path;
 extern char* combine_string(const char*, const char*);
+extern void add_point(float x, float y, float z, const char* image);
+extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 
 void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->program = program;
@@ -60,6 +63,124 @@ void scale_cuboid(Cuboid* cuboid, float x, float y, float z) {
 	cuboid->depth = 2 * z;
 }
 
+void test_obb(Cuboid *cuboid, Vector *ray) {
+	Vector3 right, up, forward;
+
+	float *matrix = cuboid->model.matrix;
+	init_vector(&right, matrix[0], matrix[1], matrix[2]);
+	init_vector(&up, matrix[4], matrix[5], matrix[6]);
+	init_vector(&forward, matrix[8], matrix[9], matrix[10]);
+
+	Vector3 bb_ray_delta = sub(&cuboid->position, &ray->point);
+	add_line(cuboid->position, ray->point, 1, 1, 0);
+
+	Vector3 min_bound, max_bound;
+	float width_by_2 = cuboid->width / 2;
+	float height_by_2 = cuboid->height / 2;
+	float depth_by_2 = cuboid->depth / 2;
+	init_vector(&min_bound, -width_by_2, -height_by_2, -depth_by_2);
+	init_vector(&max_bound, width_by_2, height_by_2, depth_by_2);
+
+	float t_min, t_max;
+	// x-axis
+	{
+		float nom_len = dot(&right, &bb_ray_delta);
+		float denom_len = dot(&ray->direction, &right);
+		float min, max;
+
+		if(fabs(denom_len) > 0.00001f) {
+			min = (nom_len + min_bound.x) / denom_len;
+			max = (nom_len + max_bound.x) / denom_len;
+
+			if(min < max) {
+				t_min = min;
+				t_max = max;
+			}
+			else {
+				t_min = max;
+				t_max = min;
+			}
+
+			if(t_max < t_min) {
+				return;
+			}
+		}
+		else {
+			if((-nom_len + min_bound.x) > 0 || (-nom_len + max_bound.x) < 0) {
+				return;
+			}
+		}
+	}
+	
+	// y-axis
+	{
+		float nom_len = dot(&up, &bb_ray_delta);
+		float denom_len = dot(&ray->direction, &up);
+		float min, max;
+
+		if(fabs(denom_len) > 0.00001f) {
+			min = (nom_len + min_bound.y) / denom_len;
+			max = (nom_len + max_bound.y) / denom_len;
+
+			if(min < max) {
+				t_min = f_max(t_min, min);
+				t_max = f_min(t_max, max);
+			}
+			else {
+				t_min = f_max(t_min, max);
+				t_max = f_min(t_max, min);
+			}
+
+			if(t_max < t_min) {
+				return;
+			}
+		}
+		else {
+			if((-nom_len + min_bound.y) > 0 || (-nom_len + max_bound.y) < 0) {
+				return;
+			}
+		}
+	}
+
+	// z-axis
+	{
+		float nom_len = dot(&forward, &bb_ray_delta);
+		float denom_len = dot(&ray->direction, &forward);
+		float min, max;
+
+		if(fabs(denom_len) > 0.00001f) {
+			min = (nom_len + min_bound.z) / denom_len;
+			max = (nom_len + max_bound.z) / denom_len;
+
+			if(min < max) {
+				t_min = f_max(t_min, min);
+				t_max = f_min(t_max, max);
+			}
+			else {
+				t_min = f_max(t_min, max);
+				t_max = f_min(t_max, min);
+			}
+
+			if(t_max < t_min) {
+				return;
+			}
+		}
+		else {
+			if((-nom_len + min_bound.z) > 0 || (-nom_len + max_bound.z) < 0) {
+				return;
+			}
+		}
+	}
+
+	Vector3 tmp_point_1, tmp_point_2;
+	tmp_point_1 = scalar_mul(&ray->direction, t_min);
+	tmp_point_1 = add(&tmp_point_1, &ray->point);
+	tmp_point_2 = scalar_mul(&ray->direction, t_max);
+	tmp_point_2 = add(&tmp_point_2, &ray->point);
+	add_point(tmp_point_1.x, tmp_point_1.y, tmp_point_1.z, combine_string(assets_path, "rectangle_red.png"));
+	add_point(tmp_point_2.x, tmp_point_2.y, tmp_point_2.z, combine_string(assets_path, "rectangle_blue.png"));
+}
+
 void test_aabb(Cuboid *cuboid, Vector *ray) {
 	Vector3 from, to;
 	init_vector(&from, ray->point.x, ray->point.y, ray->point.z);
@@ -85,6 +206,7 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 
 	float min_z = (min.z - from.z) / ray_dir.z;
 	float max_z = (max.z - from.z) / ray_dir.z;
+
 	if(max_z < min_z) { float tmp = max_z; max_z = min_z; min_z = tmp; }
 
 	float t_min = (min_x > min_y) ? min_x : min_y;
@@ -98,12 +220,15 @@ void test_aabb(Cuboid *cuboid, Vector *ray) {
 		t_min = min_z;
 	if(max_z < t_max)
 		t_max = max_z;
-	
+
 	Vector3 p1, p2;
 	p1 = scalar_mul(&ray_dir, t_min);
 	p1 = add(&from, &p1);
 	p2 = scalar_mul(&ray_dir, t_max);
 	p2 = add(&from, &p2);
+
+	// add_point(p1.x, p1.y, p1.z, combine_string(assets_path, "rectangle_red.png"));
+	// add_point(p2.x, p2.y, p2.z, combine_string(assets_path, "rectangle_red.png"));
 }
 
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
@@ -112,6 +237,7 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 
 	/* Translation & Scaling */
 	translate_matrix(&cuboid->model, cuboid->position.x, cuboid->position.y, cuboid->position.z);
+	// @Note: We have to scale the width, height when scaling the cube.
 	scale(&cuboid->model, cuboid->scale.x, cuboid->scale.y, cuboid->scale.z);
 	/* Translation & Scaling */
 

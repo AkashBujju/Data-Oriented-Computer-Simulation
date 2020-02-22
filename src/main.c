@@ -102,7 +102,8 @@ int main(int argc, char** argv) {
 	translate_cuboid(&cuboid_2, 0, +15, 5);
 
 	make_cuboid(&cuboid_3, shader1, combine_string(assets_path, "rectangle_gray.png"));
-	translate_cuboid(&cuboid_3, 5, 5, +10);
+	// translate_cuboid(&cuboid_3, 5, 5, +10);
+	// rotate_cuboid(&cuboid_3, 1, 1, 1, 45);
 
 	Rectangle rect_1;
 	make_rectangle(&rect_1, shader1, combine_string(assets_path, "gray.png"));
@@ -142,9 +143,9 @@ int main(int argc, char** argv) {
 		set_matrix4(shader1, "view", &view);
 		set_matrix4(shader1, "projection", &projection);
 
-		draw_rectangle(&rect_1, &view, &projection);
-		draw_cuboid(&cuboid_1, &view, &projection);
-		draw_cuboid(&cuboid_2, &view, &projection);
+		// draw_rectangle(&rect_1, &view, &projection);
+		// draw_cuboid(&cuboid_1, &view, &projection);
+		// draw_cuboid(&cuboid_2, &view, &projection);
 		draw_cuboid(&cuboid_3, &view, &projection);
 		draw_grid(&grid, &view, &projection);
 
@@ -207,23 +208,25 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		to = add(&from, &to);
 		add_line(from, to, 0, 1, 0);
 
-		/* Testing cube_aabb */
-		/* Testing cube_aabb */
+		/* Testing cube_obb */
+		test_obb(&cuboid_3, &ray);
+		test_aabb(&cuboid_3, &ray);
+		/* Testing cube_obb */
 
-		// /* Testing grid*/
+		/* Testing grid*/
 		Vector3 plane_point;
 		int hit_plane = in_plane_point(&grid.box, &plane_point, &from, &to);
-		add_point(plane_point.x, plane_point.y, plane_point.z, combine_string(assets_path, "rectangle_red.png"));
-		if(hit_plane) {
-			Vector3 grid_hit_point;
-			int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
-			if(hit_grid) {
-				Vector3 scale, point;
-				init_vector(&scale, 1, 1, 1);
-				init_vector(&point, grid_hit_point.x, grid_hit_point.z, grid_hit_point.y + 0.2f);
 
-			}
-		}
+		// if(hit_plane) {
+		// 	Vector3 grid_hit_point;
+		// 	int hit_grid = get_sub_grid_mid_point(&grid, &plane_point, &grid_hit_point);
+		// 	if(hit_grid) {
+		// 		Vector3 scale;
+		// 		init_vector(&scale, 1, 1, 1);
+		// 		print_vector(&grid_hit_point);
+		// 		add_rectangle(&grid_hit_point, &scale, &grid.rotation_axes, grid.angle_in_degree, combine_string(assets_path, "red.png"), shader1);
+		// 	}
+		// }
 		/* Testing grid*/
 	}
 }
@@ -326,7 +329,6 @@ void add_rectangle(Vector3* position, Vector3* scale, Vector3* rotation_axes, fl
 	}
 
 	int index = rectangles_count - 1;
-
 	make_rectangle(&rectangles[index], shader, image);
 	translate_rectangle(&rectangles[index], position->x, position->y, position->z);
 	rotate_rectangle(&rectangles[index], rotation_axes->x, rotation_axes->y, rotation_axes->z, angle_in_degree);
