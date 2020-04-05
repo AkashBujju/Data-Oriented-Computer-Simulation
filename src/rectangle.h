@@ -13,6 +13,7 @@ struct Rectangle {
 	Vector3 scale;
 	Vector3 rotation_axes;
 	float angle_in_degree;
+	float width, height;
 };
 typedef struct Rectangle Rectangle;
 
@@ -21,6 +22,7 @@ void translate_rectangle(Rectangle *rectangle, float x, float y, float z);
 void rotate_rectangle(Rectangle *rectangle, float x, float y, float z, float degree);
 void scale_rectangle(Rectangle *rectangle, float x, float y, float z);
 void draw_rectangle(Rectangle *rectangle, const Matrix4* view, const Matrix4* projection);
+int i_quad(Rectangle *rectangle, Vector *ray, Vector3* result);
 void delete_rectangle(Rectangle *rectangle);
 
 #endif

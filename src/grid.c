@@ -117,7 +117,7 @@ void translate_box(Box* box, float x, float y, float z) {
 }
 
 void rotate_box(Box *box, Vector3 *axes, float degree) {
-	box->center= rotate_point(&box->center, axes, degree);
+	box->center = rotate_point(&box->center, axes, degree);
 	box->top_left = rotate_point(&box->top_left, axes, degree);
 	box->top_right = rotate_point(&box->top_right, axes, degree);
 	box->bottom_right = rotate_point(&box->bottom_right, axes, degree);
@@ -125,28 +125,59 @@ void rotate_box(Box *box, Vector3 *axes, float degree) {
 }
 
 int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res) {
-	// @Note: Here we check the 'z' co-ordinate for height, because the grid is rotated on the x-axis.
+	// @Note: Here we check the 'y' co-ordinate for height, because the grid is rotated on the x-axis.
 	// This won't work if the grid is in some other orientation.
 
-	float p_width = p->x - grid->box.top_left.x;
-	float actual_width = grid->per_width * grid->num_cols;
-	if(p_width < 0 || p_width > actual_width)
+	// float p_width = p->x - grid->box.top_left.x;
+	// float actual_width = grid->per_width * grid->num_cols;
+	// if(p_width < 0 || p_width > actual_width)
+	// 	return 0;
+
+	// float x_ratio = p_width / actual_width;
+	// unsigned int x_index = ceil(x_ratio * grid->num_cols) - 1;
+
+	// float p_height = p->y - grid->box.bottom_left.y;
+	// float actual_height = grid->per_height * grid->num_rows;
+	// if(p_height < 0 || p_height > actual_height)
+	// 	return 0;
+
+	// float y_ratio = p_height / actual_height;
+	// unsigned int y_index = ceil(y_ratio * grid->num_rows) - 1;
+
+	// res->z = grid->box.center.z;
+	// res->x = grid->box.top_left.x + (x_index * grid->per_width) + (grid->per_width / 2);
+	// res->y = (y_index * grid->per_height) + (grid->per_height / 2) - grid->box.top_left.y;
+	
+	/* Width Test */
+	Vector3 v_len = sub(&grid->box.top_right, &grid->box.top_left);
+	Vector3 p_len = sub(p, &grid->box.top_left);
+	float x_percent = dot(&p_len, &v_len) / dot(&v_len, &v_len);
+	float per_percent = 1 / (float)grid->num_cols;
+	x_percent = (floor(x_percent / per_percent) * per_percent) + (per_percent / 2);
+	float x_distance = x_percent * grid->per_width * grid->num_rows;
+	if(x_percent >= 1.0f)
 		return 0;
 
-	float x_ratio = p_width / actual_width;
-	unsigned int x_index = ceil(x_ratio * grid->num_cols) - 1;
-
-	float p_height = p->z - grid->box.bottom_left.z;
-	float actual_height = grid->per_height * grid->num_rows;
-	if(p_height < 0 || p_height > actual_height)
+	v_len = sub(&grid->box.bottom_left, &grid->box.top_left);
+	p_len = sub(p, &grid->box.top_left);
+	float y_percent = dot(&p_len, &v_len) / dot(&v_len, &v_len);
+	per_percent = 1 / (float)grid->num_rows;
+	y_percent = (floor(y_percent / per_percent) * per_percent) + (per_percent / 2);
+	float y_distance = y_percent * grid->per_height * grid->num_cols;
+	if(y_percent >= 1.0f)
 		return 0;
 
-	float z_ratio = p_height / actual_height;
-	unsigned int z_index = ceil(z_ratio * grid->num_rows) - 1;
+	Vector3 dir1 = sub(&grid->box.top_right, &grid->box.top_left);
+	normalize_vector(&dir1);
+	Vector3 end_1 = scalar_mul(&dir1, x_distance);
+	end_1 = add(&end_1, &grid->box.top_left);
 
-	res->y = grid->box.center.y;
-	res->x = grid->box.top_left.x + (x_index * grid->per_width) + (grid->per_width / 2);
-	res->z = (z_index * grid->per_height) + (grid->per_height / 2) - grid->box.top_left.z;
+	Vector3 dir2 = sub(&grid->box.bottom_left, &grid->box.top_left);
+	normalize_vector(&dir2);
+	Vector3 end_2 = scalar_mul(&dir2, y_distance);
+	end_2 = add(&end_2, &end_1);
+
+	copy_vector(res, &end_2);
 
 	return 1;
 }

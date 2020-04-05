@@ -8,14 +8,12 @@
 
 extern const char* assets_path;
 extern char* combine_string(const char*, const char*);
-// extern void add_point(float x, float y, float z, const char* image);
-// extern void add_line(Vector3 start, Vector3 end, float r, float g, float b);
 
-void make_cuboid(Cuboid *cuboid, int program, const char* image) {
+void make_cuboid(Cuboid *cuboid, int program, int texture_id) {
 	cuboid->program = program;
 
 	float vertices[180];
-	read_floats_from_file(combine_string(assets_path, "cuboid_vertices.dat"), vertices);
+	read_floats_from_file(combine_string(assets_path, "vertices/cuboid_vertices.dat"), vertices);
 
 	glGenVertexArrays(1, &cuboid->vao);
 	glGenBuffers(1, &cuboid->vbo);
@@ -30,7 +28,6 @@ void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	cuboid->texture_id = make_texture(image);
 	init_matrix(&cuboid->model);
 	init_vector(&cuboid->position, 0, 0, 0);
 	init_vector(&cuboid->scale, 1, 1, 1);
@@ -39,6 +36,7 @@ void make_cuboid(Cuboid *cuboid, int program, const char* image) {
 	cuboid->width = 2;
 	cuboid->height = 2;
 	cuboid->depth= 2;
+	cuboid->texture_id = texture_id;
 }
 
 void translate_cuboid(Cuboid *cuboid, float x, float y, float z) {
@@ -58,9 +56,149 @@ void scale_cuboid(Cuboid* cuboid, float x, float y, float z) {
 	cuboid->scale.x = x;
 	cuboid->scale.y = y;
 	cuboid->scale.z = z;
-	cuboid->width = 2 * x;
-	cuboid->height = 2 * y;
-	cuboid->depth = 2 * z;
+	cuboid->width *= x;
+	cuboid->height *= y;
+	cuboid->depth *= z;
+}
+
+int obb(Cuboid *cuboids, unsigned int count, Vector *ray) {
+	unsigned int hit_indices[50];
+	unsigned int hit_count = 0;
+
+	for(unsigned int i = 0; i < count; ++i) {
+		Cuboid *cuboid = &cuboids[i];
+		Vector3 right, up, forward;
+
+		float *matrix = cuboid->model.matrix;
+		init_vector(&right, matrix[0], matrix[1], matrix[2]);
+		init_vector(&up, matrix[4], matrix[5], matrix[6]);
+		init_vector(&forward, matrix[8], matrix[9], matrix[10]);
+
+		normalize_vector(&right);
+		normalize_vector(&up);
+		normalize_vector(&forward);
+
+		Vector3 bb_ray_delta = sub(&cuboid->position, &ray->point);
+		Vector3 min_bound, max_bound;
+		float width_by_2 = cuboid->width / 2;
+		float height_by_2 = cuboid->height / 2;
+		float depth_by_2 = cuboid->depth / 2;
+
+		init_vector(&min_bound, -width_by_2, -height_by_2, -depth_by_2);
+		init_vector(&max_bound, width_by_2, height_by_2, depth_by_2);
+
+		float t_min = 0, t_max = 1000000;
+		// x-axis
+		{
+			float nom_len = dot(&right, &bb_ray_delta);
+			float denom_len = dot(&ray->direction, &right);
+			float min, max;
+
+			if(fabs(denom_len) > 0.00001f) {
+				min = (nom_len + min_bound.x) / denom_len;
+				max = (nom_len + max_bound.x) / denom_len;
+
+				if(min < max) {
+					t_min = min;
+					t_max = max;
+				}
+				else {
+					t_min = max;
+					t_max = min;
+				}
+
+				if(t_max < t_min) {
+					continue;
+				}
+			}
+			else {
+				if((-nom_len + min_bound.x) > 0 || (-nom_len + max_bound.x) < 0) {
+					continue;
+				}
+			}
+		}
+
+		// y-axis
+		{
+			float nom_len = dot(&up, &bb_ray_delta);
+			float denom_len = dot(&ray->direction, &up);
+			float min, max;
+
+			if(fabs(denom_len) > 0.00001f) {
+				min = (nom_len + min_bound.y) / denom_len;
+				max = (nom_len + max_bound.y) / denom_len;
+
+				if(min < max) {
+					t_min = f_max(t_min, min);
+					t_max = f_min(t_max, max);
+				}
+				else {
+					t_min = f_max(t_min, max);
+					t_max = f_min(t_max, min);
+				}
+
+				if(t_max < t_min) {
+					continue;
+				}
+			}
+			else {
+				if((-nom_len + min_bound.y) > 0 || (-nom_len + max_bound.y) < 0) {
+					continue;
+				}
+			}
+		}
+
+		// z-axis
+		{
+			float nom_len = dot(&forward, &bb_ray_delta);
+			float denom_len = dot(&ray->direction, &forward);
+			float min, max;
+
+			if(fabs(denom_len) > 0.00001f) {
+				min = (nom_len + min_bound.z) / denom_len;
+				max = (nom_len + max_bound.z) / denom_len;
+
+				if(min < max) {
+					t_min = f_max(t_min, min);
+					t_max = f_min(t_max, max);
+				}
+				else {
+					t_min = f_max(t_min, max);
+					t_max = f_min(t_max, min);
+				}
+
+				if(t_max < t_min) {
+					continue;
+				}
+			}
+			else {
+				if((-nom_len + min_bound.z) > 0 || (-nom_len + max_bound.z) < 0) {
+					continue;
+				}
+			}
+		}
+
+		hit_indices[hit_count++] = i;
+	}
+
+	// Finding the cuboid that is closest to the camera.
+	if(hit_count == 0)
+		return -1;
+	else if(hit_count == 1)
+		return hit_indices[0];
+
+	float current_distance = 0xFFFFFF;
+	unsigned int min_index = 0;
+	for(unsigned int i = 0; i < hit_count; ++i) {
+		int current_index = hit_indices[i];
+		float distance = get_distance(&ray->point, &cuboids[current_index].position);
+		if(distance < current_distance) {
+			current_distance = distance;
+			min_index = current_index;
+		}
+	}
+
+	return min_index;
 }
 
 int test_obb(Cuboid *cuboid, Vector *ray) {
@@ -71,12 +209,16 @@ int test_obb(Cuboid *cuboid, Vector *ray) {
 	init_vector(&up, matrix[4], matrix[5], matrix[6]);
 	init_vector(&forward, matrix[8], matrix[9], matrix[10]);
 
-	Vector3 bb_ray_delta = sub(&cuboid->position, &ray->point);
+	normalize_vector(&right);
+	normalize_vector(&up);
+	normalize_vector(&forward);
 
+	Vector3 bb_ray_delta = sub(&cuboid->position, &ray->point);
 	Vector3 min_bound, max_bound;
 	float width_by_2 = cuboid->width / 2;
 	float height_by_2 = cuboid->height / 2;
 	float depth_by_2 = cuboid->depth / 2;
+
 	init_vector(&min_bound, -width_by_2, -height_by_2, -depth_by_2);
 	init_vector(&max_bound, width_by_2, height_by_2, depth_by_2);
 
@@ -110,7 +252,7 @@ int test_obb(Cuboid *cuboid, Vector *ray) {
 			}
 		}
 	}
-	
+
 	// y-axis
 	{
 		float nom_len = dot(&up, &bb_ray_delta);
@@ -171,14 +313,6 @@ int test_obb(Cuboid *cuboid, Vector *ray) {
 		}
 	}
 
-	// Vector3 tmp_point_1, tmp_point_2;
-	// tmp_point_1 = scalar_mul(&ray->direction, t_min);
-	// tmp_point_1 = add(&tmp_point_1, &ray->point);
-	// tmp_point_2 = scalar_mul(&ray->direction, t_max);
-	// tmp_point_2 = add(&tmp_point_2, &ray->point);
-	// add_point(tmp_point_1.x, tmp_point_1.y, tmp_point_1.z, combine_string(assets_path, "rectangle_red.png"));
-	// add_point(tmp_point_2.x, tmp_point_2.y, tmp_point_2.z, combine_string(assets_path, "rectangle_blue.png"));
-	
 	return 1;
 }
 
@@ -228,19 +362,16 @@ int test_aabb(Cuboid *cuboid, Vector *ray) {
 	p2 = scalar_mul(&ray_dir, t_max);
 	p2 = add(&from, &p2);
 
-	// add_point(p1.x, p1.y, p1.z, combine_string(assets_path, "rectangle_red.png"));
-	// add_point(p2.x, p2.y, p2.z, combine_string(assets_path, "rectangle_red.png"));
-	
 	return 1;
 }
 
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(cuboid->program);
 	make_identity(&cuboid->model);
+	make_identity(&cuboid->unscaled_model);
 
 	/* Translation & Scaling */
 	translate_matrix(&cuboid->model, cuboid->position.x, cuboid->position.y, cuboid->position.z);
-	// @Note: We have to scale the width, height when scaling the cube.
 	scale(&cuboid->model, cuboid->scale.x, cuboid->scale.y, cuboid->scale.z);
 	/* Translation & Scaling */
 
@@ -248,8 +379,11 @@ void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection)
 	Vector3 tmp;
 	init_vector(&tmp, cuboid->position.x, cuboid->position.y, cuboid->position.z);
 	translate_matrix(&cuboid->model, 0, 0, 0);
+	translate_matrix(&cuboid->unscaled_model, 0, 0, 0);
 	rotate(&cuboid->model, &cuboid->rotation_axes, cuboid->angle_in_degree);
+	rotate(&cuboid->unscaled_model, &cuboid->rotation_axes, cuboid->angle_in_degree);
 	translate_matrix(&cuboid->model, tmp.x, tmp.y, tmp.z);
+	translate_matrix(&cuboid->unscaled_model, tmp.x, tmp.y, tmp.z);
 	/* Rotation */
 
 	set_matrix4(cuboid->program, "model", &cuboid->model);

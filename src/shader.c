@@ -5,7 +5,7 @@
 #include "shader.h"
 #include "utils.h"
 #include "math.h"
-#include "..\\external\\stb_image.h"
+#include "../external/darwin/stb_image.h"
 
 unsigned int compile_shader(const char* vertex_file, const char* fragment_file) {
 	int success;

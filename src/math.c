@@ -41,6 +41,11 @@ void init_vector4(Vector4 *vec, float x, float y, float z, float a) {
 	vec->a = a;
 }
 
+void init_vector2(Vector2 *vec, float x, float y) {
+	vec->x = x;
+	vec->y = y;
+}
+
 void copy_vector(Vector3 *to, Vector3 *from) {
 	to->x = from->x;
 	to->y = from->y;
@@ -306,6 +311,19 @@ void multiply_matrix(Matrix4 *m1, Matrix4 *m2) {
 	copy_matrix(&res, m1);
 }
 
+Matrix4 ortho(float left, float right, float bottom, float top) {
+	Matrix4 res;
+	make_identity(&res);
+	float *m = res.matrix;
+	m[0] = 2 / (right - left);
+	m[5] = 2 / (top - bottom);
+	m[10] = -1;
+	m[12] = -(right + left) / (right - left);
+	m[13] = -(top + bottom) / (top - bottom);
+
+	return res;
+}
+
 Matrix4 perspective(const float fov, const float aspect_ratio, const float z_near, const float z_far) {
 	Matrix4 res;
 	make_identity(&res);
@@ -384,6 +402,14 @@ Matrix4 matrix_inverse(Matrix4 *mat) {
 	return inv;
 }
 
+float f_normalize(float value, float from_range_start, float from_range_end, float to_range_start, float to_range_end) {
+	float old_diff = from_range_start - from_range_end;
+	float new_diff = to_range_start - to_range_end;
+	float new_value = (((value - from_range_start) * new_diff) / old_diff) + to_range_start;
+
+	return new_value;
+}
+
 Vector3 normalize_to(float x, float y, int width, int height) {
 	Vector3 res;
 	init_vector(&res, x / width * 2 - 1, 1 - y / height * 2, 0);
@@ -415,6 +441,38 @@ Vector4 mul_mat4_and_vec(Matrix4 *mat, Vector4 *vec) {
 	res.a = x * m[12] + y * m[13] + z * m[14] + w * m[15];
 
 	return res;
+}
+
+Vector compute_mouse_ray_2(float norm_x, float norm_y, Matrix4 *view, Matrix4 *projection) {
+	Matrix4 mat_world;
+	Matrix4 inv_view = matrix_inverse(view);
+	Matrix4 inv_projection = matrix_inverse(projection);
+	copy_matrix(&inv_projection, &mat_world);
+	multiply_matrix(&mat_world, &inv_view);
+
+	Vector4 near, far;
+	init_vector4(&near, norm_x, norm_y, -1, 1);
+	init_vector4(&far, norm_x, norm_y, 1, 1);
+	near = mul_vec_and_mat4(&near, &mat_world);
+	far = mul_vec_and_mat4(&far, &mat_world);
+
+	near.x /= near.a;
+	near.y /= near.a;
+	near.z /= near.a;
+
+	far.x /= far.a;
+	far.y /= far.a;
+	far.z /= far.a;
+
+	Vector vec;
+	Vector3 to;
+	init_vector(&vec.point, near.x, near.y, near.z);
+	init_vector(&to, far.x, far.y, far.z);
+
+	vec.direction = sub(&to, &vec.point);
+	normalize_vector(&vec.direction);
+
+	return vec;
 }
 
 Vector compute_mouse_ray(float norm_x, float norm_y, Matrix4 *view, Matrix4 *projection) {
@@ -463,6 +521,98 @@ int in_plane_point(Box *box, Vector3 *res, Vector3 *ray_start, Vector3* ray_end)
 	return 0;
 }
 
+float get_distance(Vector3 *p1, Vector3 *p2) {
+	return sqrt((p1->x - p2->x) + (p1->y - p2->y) + (p1->z - p2->z));
+}
+
+LineEq form_line(Vector3 *p1, Vector3 *p2) {
+	LineEq line_eq;
+	line_eq.x = p1->x;
+	line_eq.y = p1->y;
+	line_eq.z = p1->z;
+	line_eq.a = p2->x - p1->x;
+	line_eq.b = p2->y - p1->y;
+	line_eq.c = p2->z - p1->z;
+
+	return line_eq;
+}
+
+Vector3 line_intersect(LineEq *line_eq_1, LineEq *line_eq_2) {
+	Vector3 result;
+	init_vector(&result, 0, 0, 0);
+
+	float lambda, u;
+	float lambda_1, n1, u_1;
+	float lambda_2, n2, u_2;
+	float to_check_dim_1, to_check_const_1;
+	float to_check_dim_2, to_check_const_2;
+
+	/* eqn_2: n1 + lambda = u */
+	/* eqn_2: n2 + lambda = u */
+
+	if(line_eq_1->a == 0 && line_eq_2->a == 0) {
+		lambda_1 = line_eq_1->b; u_1 = line_eq_2->b; n1 = line_eq_1->y - line_eq_2->y;
+		lambda_2 = line_eq_1->c; u_2 = line_eq_2->c; n2 = line_eq_1->z - line_eq_2->z;
+		to_check_dim_1 = line_eq_1->x; to_check_const_1 = line_eq_1->a;
+		to_check_dim_2 = line_eq_2->x; to_check_const_2 = line_eq_2->a;
+	}
+	else if(line_eq_1->b == 0 && line_eq_2->b == 0) {
+		lambda_1 = line_eq_1->a; u_1 = line_eq_2->a; n1 = line_eq_1->x - line_eq_2->x;
+		lambda_2 = line_eq_1->c; u_2 = line_eq_2->c; n2 = line_eq_1->z - line_eq_2->z;
+		to_check_dim_1 = line_eq_1->y; to_check_const_1 = line_eq_1->b;
+		to_check_dim_2 = line_eq_2->y; to_check_const_2 = line_eq_2->b;
+	}
+	else {
+		lambda_1 = line_eq_1->a; u_1 = line_eq_2->a; n1 = line_eq_1->x - line_eq_2->x;
+		lambda_2 = line_eq_1->b; u_2 = line_eq_2->b; n2 = line_eq_1->y - line_eq_2->y;
+		to_check_dim_1 = line_eq_1->z; to_check_const_1 = line_eq_1->c;
+		to_check_dim_2 = line_eq_2->z; to_check_const_2 = line_eq_2->c;
+	}
+
+	if(fabs(u_1) <= 0.0001f) {
+		lambda = -n1 / lambda_1;
+	}
+	else {
+		lambda_1 /= u_1;
+		n1 /= u_1;
+		u_1 = 1;
+	}
+
+	if(fabs(lambda_2) <= 0.0001f) {
+		u = n2 / u_2;
+	}
+	else if(fabs(u_2) <= 0.0001f) {
+		lambda = -n2 / lambda_2;
+		u = n1 + lambda_1 * lambda;
+	}
+	else {
+		lambda_2 /= u_2;
+		n2 /= u_2;
+		u_2 = 1;
+		lambda = (n1 - n2) / (lambda_2 - lambda_1);
+		u = n1 + lambda_1 * lambda;
+	}
+
+	/* Checking if lambda and u satisfy eqn_3 */
+	float lhs = to_check_dim_1 + lambda * to_check_const_1;
+	float rhs = to_check_dim_2 + u * to_check_const_2;
+	if(fabs(lhs - rhs) <= 0.0001f) {
+		result.x = line_eq_1->x + lambda * line_eq_1->a;
+		result.y = line_eq_1->y + lambda * line_eq_1->b;
+		result.z = line_eq_1->z + lambda * line_eq_1->c;
+	}
+	else {
+		/* They do not intersect */
+		printf("Lines do not intersect!\n");
+	}
+
+	return result;
+}
+
+void print_line(LineEq *line_eq) {
+	printf("Vector form: a: %.2f, b: %.2f, c: %.2f :: %.2f %.2f %.2f\n", line_eq->a, line_eq->b, line_eq->c, line_eq->x, line_eq->y, line_eq->z);
+}
+
 void print_matrix(Matrix4 *mat) {
 	const float *ptr = mat->matrix;
 	for(int i = 0; i < 16; ++i) {
@@ -471,6 +621,10 @@ void print_matrix(Matrix4 *mat) {
 		printf("%.2f ", ptr[i]);
 	}
 	printf("\n\n");
+}
+
+void print_vector2(Vector2 *vec) {
+	printf("%.2f %.2f\n", vec->x, vec->y);
 }
 
 void print_vector(Vector3 *vec) {

@@ -9,6 +9,7 @@ struct Cuboid {
 	unsigned int texture_id;
 	unsigned int program;
 	Matrix4 model;
+	Matrix4 unscaled_model;
 	Vector3 position;
 	Vector3 scale;
 	Vector3 rotation_axes;
@@ -17,13 +18,14 @@ struct Cuboid {
 };
 typedef struct Cuboid Cuboid;
 
-void make_cuboid(Cuboid *cuboid, int program, const char* image);
+void make_cuboid(Cuboid *cuboid, int program, int texture_id);
 void draw_cuboid(Cuboid *cuboid, const Matrix4* view, const Matrix4* projection);
 void translate_cuboid(Cuboid *cuboid, float x, float y, float z);
 void rotate_cuboid(Cuboid* cuboid, float x, float y, float z, float degree);
 void scale_cuboid(Cuboid* cuboid, float x, float y, float z);
 int test_aabb(Cuboid *cuboid, Vector *ray);
 int test_obb(Cuboid *cuboid, Vector *ray);
+int obb(Cuboid *cuboids, unsigned int count, Vector *ray);
 void delete_cuboid(Cuboid *cuboid);
 
 #endif
