@@ -184,9 +184,16 @@ int main(int argc, char** argv) {
 	/* Loading models */
 
 	float fps = 0;
+	float start = clock();
+	float tmp_d = 0;
+
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		float before = clock();
+		float now = (clock() - start) / CLOCKS_PER_SEC * 0.1f;
+
+		tmp_d = 1 * now;
+		translate_model(car, 0.25f, 0.4f, tmp_d);
 
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -208,12 +215,9 @@ int main(int argc, char** argv) {
 
 		/* FPS */
 		{
-			if(fps >= 55 && fps <= 65)
-				fps = 60;
-
 			char fps_str[20];
 			char tmp[10];
-			gcvt(fps, 2, tmp);
+			gcvt(fps, 5, tmp);
 
 			strcpy(fps_str, "fps: ");
 			strcat(fps_str, tmp);
