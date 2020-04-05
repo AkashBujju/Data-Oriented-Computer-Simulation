@@ -2,6 +2,7 @@
 #define GRID_H
 
 #include "math.h"
+#include "rectangle.h"
 
 struct Grid {
 	unsigned int vao;
@@ -18,6 +19,7 @@ struct Grid {
 	Vector3 color;
 	float angle_in_degree;
 	Box box;
+	Rectangle background;
 };
 typedef struct Grid Grid;
 
@@ -29,6 +31,5 @@ void rotate_grid(Grid* grid, float x, float y, float z, float degree);
 void translate_box(Box* box, float x, float y, float z);
 void rotate_box(Box *box, Vector3 *axes, float degree);
 int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res);
-// void scale_grid(Grid* grid, float x, float y, float z);
 
 #endif

@@ -6,7 +6,9 @@
 #include <stdio.h> // @Tmp
 
 extern const char* shaders_path;
+extern const char* assets_path;
 extern char* combine_string(const char*, const char*);
+extern int shader1;
 
 void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float per_height) {
 	grid->num_rows = num_rows;
@@ -70,7 +72,7 @@ void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float pe
 	init_vector(&grid->position, 0, 0, 0);
 	init_vector(&grid->scale, 1, 1, 1);
 	init_vector(&grid->rotation_axes, 0, 0, 0);
-	init_vector(&grid->color, 1, 1, 1);
+	init_vector(&grid->color, 0.3f, 0.3f, 0.3f);
 
 	const float width_by_2 = grid_width / 2;
 	const float height_by_2 = grid_height / 2;
@@ -79,6 +81,10 @@ void make_grid(Grid *grid, int num_rows, int num_cols, float per_width, float pe
 	init_vector(&grid->box.bottom_left, -width_by_2, -height_by_2, 0);
 	init_vector(&grid->box.bottom_right, width_by_2, -height_by_2, 0);
 	free(vertices);
+
+	/* Making rectangle */
+	make_rectangle(&grid->background, shader1, combine_string(assets_path, "png/gray.png"));
+	/* Making rectangle */
 }
 
 void translate_grid(Grid* grid, float x, float y, float z) {
@@ -204,4 +210,6 @@ void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
 
 	glBindVertexArray(grid->vao);
 	glDrawArrays(GL_LINES, 0, grid->num_vertices);
+
+	draw_rectangle(&grid->background, view, projection);
 }

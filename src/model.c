@@ -35,6 +35,29 @@ void make_model(Model *model, int program, float* vertices, int float_count, int
 	init_vector(&model->rotation_axes, 0, 0, 0);
 }
 
+void translate_model(Model *model, float x, float y, float z) {
+	model->position.x = x;
+	model->position.y = y;
+	model->position.z = z;
+}
+
+void rotate_model(Model *model, float x, float y, float z, float degree) {
+	model->angle_in_degree = degree;
+	model->rotation_axes.x = x;
+	model->rotation_axes.y = y;
+	model->rotation_axes.z = z;
+}
+
+void scale_model(Model *model, float x, float y, float z) {
+	model->scale.x = x;
+	model->scale.y = y;
+	model->scale.z = z;
+
+	model->width *= x;
+	model->height *= y;
+	model->depth *= z;
+}
+
 void draw_model(Model *model, const Matrix4* view, const Matrix4* projection) {
 	glUseProgram(model->program);
 	make_identity(&model->model);

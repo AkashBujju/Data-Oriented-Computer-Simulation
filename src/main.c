@@ -29,10 +29,10 @@ static Font font;
 static Cuboid origin;
 static Line axes[3];
 static Grid grid;
-static Model *model;
 
 /* Textures */
-static int violet_texture;
+int violet_texture;
+int gray_texture;
 /* Textures */
 
 /* Modes */
@@ -52,17 +52,15 @@ void processInput(GLFWwindow *window);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-void add_point(float x, float y, float z, float scale, Cuboid* points_arr, int *current_total);
 char* combine_string(const char* str_1, const char* str_2);
 void character_callback(GLFWwindow* window, unsigned int codepoint);
-void load_model(const char* filename);
+Model* load_model(const char* filename);
 void remove_last_char(char* text);
 void process_command(char* command);
 void append_char(char* str, char c);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
-const char* profs_path = "../../profs/";
 
 int main(int argc, char** argv) {
 	if(argc != 2) {
@@ -76,7 +74,7 @@ int main(int argc, char** argv) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 	glfwWindowHint(GLFW_SAMPLES, 1); // @Note: On intel machines antialiasing has to be turned on.
 
@@ -116,6 +114,7 @@ int main(int argc, char** argv) {
 	/* Load textures */
 	{
 		violet_texture = make_texture(combine_string(assets_path, "png/safety_blue.png"));
+		gray_texture = make_texture(combine_string(assets_path, "png/gray.png"));
 	}
 
 	/* Init shaders */
@@ -139,12 +138,17 @@ int main(int argc, char** argv) {
 		init_vector(&axes[0].color, 1, 0, 0);
 		init_vector(&axes[1].color, 0, 1, 0);
 		init_vector(&axes[2].color, 0, 0, 1);
+	}
 
+	/* Init grid */
+	{
 		make_grid(&grid, 100, 100, 0.2f, 0.2f);
 		translate_grid(&grid, 0, 0, 0);
-		
-		model = NULL;
+		rotate_grid(&grid, 1, 0, 0, 90);
+		rotate_rectangle(&grid.background, 1, 0, 0, 90);
+		scale_rectangle(&grid.background, 10, 10, 10);
 	}
+	/* Init grid */
 
 	/* init view & projection */
 	{
@@ -152,7 +156,7 @@ int main(int argc, char** argv) {
 		projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 500.0f);
 		text_projection = ortho(0, 1440.0f, 0, 900);
 		init_vector(&front, -0.49f, -0.56f, -0.67f);
-		init_vector(&position, 36.77f, 42.26, 44.36f);
+		init_vector(&position, 11.0f, 13.0, 15.0f);
 		init_vector(&up, 0, 1, 0);
 	}
 
@@ -160,6 +164,7 @@ int main(int argc, char** argv) {
 	{
 		show_cursor = 1;
 	}
+	/* Init other variables */
 
 	/* Init font */
 	FT_Library ft;
@@ -167,13 +172,23 @@ int main(int argc, char** argv) {
 	init_font(&font, combine_string(assets_path, "fonts/consolas.ttf"), &ft);
 	/* Init font */
 
+	/* Loading models */
+	Model *car = load_model("car.model");
+	translate_model(car, 0.25f, 0.4f, 0);
+	scale_model(car, 0.4f, 0.4f, 0.4f);
+
+	Model *road = load_model("road.model");
+	translate_model(road, 0, 0.15f, 0);
+	rotate_model(road, 1, 0, 0, 90);
+	scale_model(road, 2, 2, 1);
+	/* Loading models */
+
 	float fps = 0;
-	// float start_time = clock();
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		float before = clock();
 
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Vector3 pos_plus_front = add(&position, &front);
@@ -199,7 +214,7 @@ int main(int argc, char** argv) {
 			char fps_str[20];
 			char tmp[10];
 			gcvt(fps, 2, tmp);
-			
+
 			strcpy(fps_str, "fps: ");
 			strcat(fps_str, tmp);
 			render_text(&font, text_shader, fps_str, 0.02f * window_width, 0.9f * window_height, 1, 0, 1, 0);
@@ -229,7 +244,7 @@ int main(int argc, char** argv) {
 			char zoom_speed_str[20];
 			char tmp[10];
 			gcvt(zoom_speed, 4, tmp);
-			
+
 			strcpy(zoom_speed_str, "zoom_speed: ");
 			strcat(zoom_speed_str, tmp);
 			render_text(&font, text_shader, zoom_speed_str, 0.02f * window_width, 0.80f * window_height, 1, 0, 1, 0);
@@ -245,8 +260,10 @@ int main(int argc, char** argv) {
 		if(toggle_grid) {
 			draw_grid(&grid, &view, &projection);
 		}
-		if(model != NULL) {
-			draw_model(model, &view, &projection);
+
+		{
+			draw_model(car, &view, &projection);
+			draw_model(road, &view, &projection);
 		}
 
 		glfwSwapBuffers(window);
@@ -312,10 +329,7 @@ void process_command(char* command) {
 	split_str[1] = (char*)malloc(sizeof(char) * len);
 	strcpy(split_str[1], ptr);
 
-	if(strcmp(split_str[0], "load") == 0) {
-		load_model(split_str[1]);
-	}
-	else if(strcmp(split_str[0], "toggle") == 0) {
+	if(strcmp(split_str[0], "toggle") == 0) {
 		if(strcmp(split_str[1], "origin") == 0) {
 			show_origin = !show_origin;
 		}
@@ -325,7 +339,7 @@ void process_command(char* command) {
 	}
 }
 
-void load_model(const char* filename) {
+Model* load_model(const char* filename) {
 	FILE *file = NULL;
 	const char* path = "../../data/models/";
 	char final_path[50];
@@ -335,6 +349,7 @@ void load_model(const char* filename) {
 
 	if(file == NULL) {
 		printf("Could not open file %s\n", final_path);
+		return NULL;
 	}
 	else {
 		char tmp[50];
@@ -376,11 +391,13 @@ void load_model(const char* filename) {
 		fscanf(file, "%s", tmp); // depth
 		fscanf(file, "%f", &depth);
 
-		model = (Model*)malloc(sizeof(Model));
+		Model *model = (Model*)malloc(sizeof(Model));
 		make_model(model, shader1, vertices, total_floats, total_vertices, texture_filename, &local_origin, width, height, depth);
 
-		printf("\nmodel_loaded\n");
+		printf("\nmodel_loaded %s.\n", filename);
 		free(vertices);
+
+		return model;
 	}
 }
 
