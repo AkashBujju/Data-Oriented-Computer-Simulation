@@ -30,7 +30,7 @@ void make_rectangle(Rectangle *rectangle, int program, const char* image) {
 	rectangle->height = 2;
 	init_matrix(&rectangle->model);
 	init_vector(&rectangle->position, 0, 0, 0);
-	// init_vector(&rectangle->scale, 1, 1, 1);
+	init_vector(&rectangle->scale, 1, 1, 1);
 	init_vector(&rectangle->rotation_axes, 0, 0, 0);
 
 	free(vertices);

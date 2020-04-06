@@ -8,8 +8,8 @@
 #include <time.h>
 #include <math.h>
 #include "shader.h"
-#include "grid.h"
 #include "model.h"
+#include "grid.h"
 #include "text.h"
 #include "cube.h"
 #include "line.h"
@@ -58,6 +58,8 @@ Model* load_model(const char* filename);
 void remove_last_char(char* text);
 void process_command(char* command);
 void append_char(char* str, char c);
+float lerp(float val_1, float val_2, float t);
+float distance(Vector3 *p1, Vector3 *p2);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -173,9 +175,13 @@ int main(int argc, char** argv) {
 	/* Init font */
 
 	/* Loading models */
-	Model *car = load_model("car.model");
-	translate_model(car, 0.25f, 0.4f, 0);
-	scale_model(car, 0.4f, 0.4f, 0.4f);
+	Model *car_1 = load_model("car_1.model");
+	translate_model(car_1, 0.25f, 0.4f, 0);
+	scale_model(car_1, 0.4f, 0.4f, 0.4f);
+
+	Model *car_2 = load_model("car_2.model");
+	translate_model(car_2, 0.25f, 0.4f, 10);
+	scale_model(car_2, 0.4f, 0.4f, 0.4f);
 
 	Model *road = load_model("road.model");
 	translate_model(road, 0, 0.15f, 0);
@@ -185,18 +191,54 @@ int main(int argc, char** argv) {
 
 	float fps = 0;
 	float start = clock();
-	float tmp_d = 0;
+	float vel = 0.01;
+	float deceleration = 0.001;
+	float acceleration = 0.001;
+	float top_speed = 3;
+	int should_relax = 0;
+	float current_relax_time = 0;
+
+	Vector3 start_pos;
+	copy_vector(&start_pos, &origin.position);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		float before = clock();
-		float now = (clock() - start) / CLOCKS_PER_SEC * 0.1f;
-
-		tmp_d = 1 * now;
-		translate_model(car, 0.25f, 0.4f, tmp_d);
+		float now = (clock() - start) / CLOCKS_PER_SEC;
 
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		{
+			if((now - current_relax_time) > 2) {
+				should_relax = 0;
+			}
+
+			if(!should_relax) {
+				float current_d = distance(&car_1->position, &start_pos);
+				current_d += 0.5f;
+				float total_distance = distance(&car_2->position, &start_pos);
+				float decel_distance = total_distance / 2;
+
+				if((total_distance - current_d) >= 0.5f) {
+					if(current_d <= decel_distance) {
+						vel = f_min(vel + acceleration, top_speed);
+					}
+					else {
+						vel = f_max(vel - deceleration, 0);
+						if(vel == 0) {
+							copy_vector(&start_pos, &car_1->position);
+							current_relax_time = now;
+							should_relax = 1;
+						}
+					}
+
+					car_1->position.z += vel;
+				}
+			}
+
+			car_2->position.z += 0.005f;
+		}
 
 		Vector3 pos_plus_front = add(&position, &front);
 		view = look_at(&position, &pos_plus_front, &up);
@@ -265,8 +307,10 @@ int main(int argc, char** argv) {
 			draw_grid(&grid, &view, &projection);
 		}
 
+
 		{
-			draw_model(car, &view, &projection);
+			draw_model(car_1, &view, &projection);
+			draw_model(car_2, &view, &projection);
 			draw_model(road, &view, &projection);
 		}
 
@@ -540,4 +584,23 @@ void remove_last_char(char* text) {
 
 		index += 1;
 	}
+}
+
+float lerp(float val_1, float val_2, float t) {
+	if(t >= 1)
+		return val_2;
+	else if(t <= 0)
+		return val_1;
+
+	return (1 - t) * val_1 + t * val_2;
+}
+
+float distance(Vector3 *p1, Vector3 *p2) {
+	float d = sqrt(
+			(p1->x - p2->x) * (p1->x - p2->x) +
+			(p1->y - p2->y) * (p1->y - p2->y) +
+			(p1->z - p2->z) * (p1->z - p2->z)
+			);
+
+	return d;
 }

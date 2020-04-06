@@ -131,30 +131,6 @@ void rotate_box(Box *box, Vector3 *axes, float degree) {
 }
 
 int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res) {
-	// @Note: Here we check the 'y' co-ordinate for height, because the grid is rotated on the x-axis.
-	// This won't work if the grid is in some other orientation.
-
-	// float p_width = p->x - grid->box.top_left.x;
-	// float actual_width = grid->per_width * grid->num_cols;
-	// if(p_width < 0 || p_width > actual_width)
-	// 	return 0;
-
-	// float x_ratio = p_width / actual_width;
-	// unsigned int x_index = ceil(x_ratio * grid->num_cols) - 1;
-
-	// float p_height = p->y - grid->box.bottom_left.y;
-	// float actual_height = grid->per_height * grid->num_rows;
-	// if(p_height < 0 || p_height > actual_height)
-	// 	return 0;
-
-	// float y_ratio = p_height / actual_height;
-	// unsigned int y_index = ceil(y_ratio * grid->num_rows) - 1;
-
-	// res->z = grid->box.center.z;
-	// res->x = grid->box.top_left.x + (x_index * grid->per_width) + (grid->per_width / 2);
-	// res->y = (y_index * grid->per_height) + (grid->per_height / 2) - grid->box.top_left.y;
-	
-	/* Width Test */
 	Vector3 v_len = sub(&grid->box.top_right, &grid->box.top_left);
 	Vector3 p_len = sub(p, &grid->box.top_left);
 	float x_percent = dot(&p_len, &v_len) / dot(&v_len, &v_len);
@@ -189,27 +165,27 @@ int get_sub_grid_mid_point(Grid *grid, Vector3* p, Vector3 *res) {
 }
 
 void draw_grid(Grid *grid, Matrix4* view, Matrix4* projection) {
-	glUseProgram(grid->program);
+	// glUseProgram(grid->program);
 
-	make_identity(&grid->model);
-	translate_matrix(&grid->model, grid->position.x, grid->position.y, grid->position.z);
-	scale(&grid->model, grid->scale.x, grid->scale.y, grid->scale.z);
+	// make_identity(&grid->model);
+	// translate_matrix(&grid->model, grid->position.x, grid->position.y, grid->position.z);
+	// scale(&grid->model, grid->scale.x, grid->scale.y, grid->scale.z);
 
-	/* Rotation */
-	Vector3 tmp;
-	init_vector(&tmp, grid->position.x, grid->position.y, grid->position.z);
-	translate_matrix(&grid->model, 0, 0, 0);
-	rotate(&grid->model, &grid->rotation_axes, grid->angle_in_degree);
-	translate_matrix(&grid->model, tmp.x, tmp.y, tmp.z);
-	/* Rotation */
+	// /* Rotation */
+	// Vector3 tmp;
+	// init_vector(&tmp, grid->position.x, grid->position.y, grid->position.z);
+	// translate_matrix(&grid->model, 0, 0, 0);
+	// rotate(&grid->model, &grid->rotation_axes, grid->angle_in_degree);
+	// translate_matrix(&grid->model, tmp.x, tmp.y, tmp.z);
+	// /* Rotation */
 
-	set_vector3(grid->program, "aColor", &grid->color);
-	set_matrix4(grid->program, "model", &grid->model);
-	set_matrix4(grid->program, "view", view);
-	set_matrix4(grid->program, "projection", projection);
+	// set_vector3(grid->program, "aColor", &grid->color);
+	// set_matrix4(grid->program, "model", &grid->model);
+	// set_matrix4(grid->program, "view", view);
+	// set_matrix4(grid->program, "projection", projection);
 
-	glBindVertexArray(grid->vao);
-	glDrawArrays(GL_LINES, 0, grid->num_vertices);
+	// glBindVertexArray(grid->vao);
+	// glDrawArrays(GL_LINES, 0, grid->num_vertices);
 
 	draw_rectangle(&grid->background, view, projection);
 }
