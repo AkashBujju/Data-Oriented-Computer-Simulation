@@ -14,6 +14,16 @@
 #include "cube.h"
 #include "line.h"
 
+typedef struct Car {
+	int id;
+	Vector3 position;
+	Vector3 start_position;
+	Vector3 to_follow_position;
+	float should_stop;
+	float current_relax_secs;
+	float vel;
+} Car;
+
 unsigned int window_width = 400;
 unsigned int window_height = 400;
 Matrix4 view, projection, text_projection;
@@ -60,6 +70,7 @@ void process_command(char* command);
 void append_char(char* str, char c);
 float lerp(float val_1, float val_2, float t);
 float distance(Vector3 *p1, Vector3 *p2);
+int n_lerp(Vector3 *start, Vector3 *current, Vector3 *destination, float *vel, float acc, float dcc, float top_vel);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -191,12 +202,28 @@ int main(int argc, char** argv) {
 
 	float fps = 0;
 	float start = clock();
-	float vel = 0.01;
-	float deceleration = 0.001;
-	float acceleration = 0.001;
-	float top_speed = 3;
-	int should_relax = 0;
-	float current_relax_time = 0;
+
+	Car c1, c2;
+	{
+		c1.id = 1;
+		c1.should_stop = 0;
+		c1.current_relax_secs = 0;
+		c1.vel = 0.01;
+		copy_vector(&c1.start_position, &car_1->position);
+		copy_vector(&c1.position, &car_1->position);
+		copy_vector(&c1.to_follow_position, &car_2->position);
+
+		c2.id = 2;
+		c2.should_stop = 0;
+		c2.current_relax_secs = 0;
+		c2.vel = 0.01;
+		Vector3 to_follow;
+		copy_vector(&to_follow, &car_2->position);
+		to_follow.z += 50;
+		copy_vector(&c2.start_position, &car_2->position);
+		copy_vector(&c2.position, &car_2->position);
+		copy_vector(&c2.to_follow_position, &to_follow);
+	}
 
 	Vector3 start_pos;
 	copy_vector(&start_pos, &origin.position);
@@ -210,34 +237,48 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		{
-			if((now - current_relax_time) > 2) {
-				should_relax = 0;
+			if((now - c1.current_relax_secs) > 1) {
+				c1.should_stop = 0;
 			}
 
-			if(!should_relax) {
-				float current_d = distance(&car_1->position, &start_pos);
-				current_d += 0.5f;
-				float total_distance = distance(&car_2->position, &start_pos);
-				float decel_distance = total_distance / 2;
-
-				if((total_distance - current_d) >= 0.5f) {
-					if(current_d <= decel_distance) {
-						vel = f_min(vel + acceleration, top_speed);
-					}
-					else {
-						vel = f_max(vel - deceleration, 0);
-						if(vel == 0) {
-							copy_vector(&start_pos, &car_1->position);
-							current_relax_time = now;
-							should_relax = 1;
-						}
-					}
-
-					car_1->position.z += vel;
+			if(!c1.should_stop) {
+				int res = n_lerp(&c1.start_position, &c1.position, &c1.to_follow_position, &c1.vel, 0.001, 0.001, 3);
+				if(res) {
+					c1.current_relax_secs = now;
+					c1.should_stop = 1;
+				}
+				else {
+					c1.position.z += c1.vel;
 				}
 			}
 
 			car_2->position.z += 0.005f;
+
+			copy_vector(&c1.to_follow_position, &car_2->position);
+			c1.to_follow_position.z -= 0.5f;
+			copy_vector(&car_1->position, &c1.position);
+		}
+
+		{
+			if((now - c2.current_relax_secs) > 1) {
+				c2.should_stop = 0;
+			}
+
+			if(!c2.should_stop) {
+				int res = n_lerp(&c2.start_position, &c2.position, &c2.to_follow_position, &c2.vel, 0.001, 0.001, 3);
+				if(res) {
+					c2.current_relax_secs = now;
+					c2.should_stop = 1;
+				}
+				else {
+					c2.position.z += c2.vel;
+					// printf("c2.position: %.3f %.3f %.3f\n", c2.position.x, c2.position.y, c2.position.z);
+					// printf("c2.to_follow_position: %.3f %.3f %.3f\n", c2.to_follow_position.x, c2.to_follow_position.y, c2.to_follow_position.z);
+				}
+			}
+
+			// copy_vector(&c2.to_follow_position, &car_2->position);
+			copy_vector(&car_2->position, &c2.position);
 		}
 
 		Vector3 pos_plus_front = add(&position, &front);
@@ -603,4 +644,29 @@ float distance(Vector3 *p1, Vector3 *p2) {
 			);
 
 	return d;
+}
+
+int n_lerp(Vector3 *start, Vector3 *current, Vector3 *destination, float *vel, float acc, float dcc, float top_vel) {
+	float current_d = distance(current, start);
+	current_d += 0.5f;
+	float total_distance = distance(destination, start);
+	float decel_distance = total_distance / 2;
+
+	if((total_distance - current_d) <= 0.05f)
+		return 1;
+
+	if((total_distance - current_d) >= 0.5f) {
+		if(current_d <= decel_distance) {
+			*vel = f_min(*vel + acc, top_vel);
+		}
+		else {
+			*vel = f_max(*vel - dcc, 0);
+			if(*vel == 0) {
+				copy_vector(start, current);
+				return 1;
+			}
+		}
+	}
+
+	return 0;
 }
