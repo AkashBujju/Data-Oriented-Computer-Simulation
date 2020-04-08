@@ -19,7 +19,7 @@ struct Model {
 };
 typedef struct Model Model;
 
-void make_model(Model *model, int program, float* vertices, int float_count, int num_opengl_vertices, const char* image_path, Vector3* local_origin, float width, float height, float depth);
+void make_model(Model *model, int program, int texture_id, float* vertices, int float_count, int num_opengl_vertices, Vector3* local_origin, float width, float height, float depth);
 void draw_model(Model *model, const Matrix4* view, const Matrix4* projection);
 void scale_model(Model *model, float x, float y, float z);
 void translate_model(Model *model, float x, float y, float z);

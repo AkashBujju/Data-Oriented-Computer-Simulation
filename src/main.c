@@ -42,6 +42,9 @@ static Line axes[3];
 /* Textures */
 int violet_texture;
 int gray_texture;
+int road_texture;
+int junction_texture;
+int signal_red_texture;
 /* Textures */
 
 /* Modes */
@@ -58,8 +61,11 @@ static float zoom_speed = 1.0f;
 #define TOTAL_ROADS 150 + 9 * 3 * 4
 Model *roads[TOTAL_ROADS];
 
-#define TOTAL_JUNCTIONS 40
+#define TOTAL_JUNCTIONS 40 * 5
 Model *junctions[TOTAL_JUNCTIONS];
+
+#define TOTAL_SIGNALS 40 * 4
+Model *signals[TOTAL_SIGNALS];
 /* Models */
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -70,7 +76,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 char* combine_string(const char* str_1, const char* str_2);
 void character_callback(GLFWwindow* window, unsigned int codepoint);
-Model* load_model(const char* filename);
+Model* load_model(const char* filename, int texture_id);
 void remove_last_char(char* text);
 void process_command(char* command);
 void append_char(char* str, char c);
@@ -135,6 +141,9 @@ int main(int argc, char** argv) {
 	{
 		violet_texture = make_texture(combine_string(assets_path, "png/safety_blue.png"));
 		gray_texture = make_texture(combine_string(assets_path, "png/gray.png"));
+		signal_red_texture = make_texture(combine_string(assets_path, "png/red_signal.png"));
+		road_texture = make_texture(combine_string(assets_path, "png/road.png"));
+		junction_texture = make_texture(combine_string(assets_path, "png/junction_gimp.png"));
 	}
 
 	/* Init shaders */
@@ -200,15 +209,10 @@ int main(int argc, char** argv) {
 	// Model *car_2 = load_model("car_2.model");
 	// translate_model(car_2, 0.25f, 0.4f, 10);
 	// scale_model(car_2, 0.4f, 0.4f, 0.4f);
-
-	// Model *road = load_model("road.model");
-	// translate_model(road, 0, 0.15f, 0);
-	// rotate_model(road, 1, 0, 0, 90);
-	// scale_model(road, 2, 2, 1);
-
+	
+	init_sim();
 	/* Loading models */
 
-	init_sim();
 
 	float fps = 0;
 	float start = clock();
@@ -357,13 +361,15 @@ int main(int argc, char** argv) {
 		{
 			// draw_model(car_1, &view, &projection);
 			// draw_model(car_2, &view, &projection);
-			// draw_model(road, &view, &projection);
 
 			for(int i = 0; i < TOTAL_ROADS; ++i) {
 				draw_model(roads[i], &view, &projection);
 			}
 			for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
 				draw_model(junctions[i], &view, &projection);
+			}
+			for(int i = 0; i < TOTAL_SIGNALS; ++i) {
+				draw_model(signals[i], &view, &projection);
 			}
 		}
 
@@ -384,7 +390,7 @@ int main(int argc, char** argv) {
 }
 
 void init_sim() {
-	float start_x = -30;
+	float start_x = -21.6;
 	float start_z = 10;
 	float start_y = 0.15f;
 	float x_by = 1.2f * 4;
@@ -393,7 +399,7 @@ void init_sim() {
 	unsigned int index = 0;
 	for(int i = 1; i <= 15; ++i) {
 		for(int j = 0; j < 10; ++j) {
-			roads[index] = load_model("road.model");
+			roads[index] = load_model("road.model", road_texture);
 			translate_model(roads[index], start_x, start_y, start_z);
 			rotate_model(roads[index], 1, 0, 0, 90);
 			scale_model(roads[index], 2, 2, 1);
@@ -402,7 +408,7 @@ void init_sim() {
 			index += 1;
 		}
 
-		start_x = -30;
+		start_x = -21.6;
 		if(i % 3 == 0) {
 			start_z -= 2.4f;
 		}
@@ -413,12 +419,12 @@ void init_sim() {
 	/* Laying vertical roads */
 
 	/* Laying horizontal roads */
-	start_x = -30 + 1.2f;
+	start_x = -21.6 + 1.2f;
 	start_z = 10 - 1.2f * 3;
 	start_y = 0.15f;
 	for(int i = 1; i <= 4; ++i) {
 		for(int j = 1; j <= 27; ++j) {
-			roads[index] = load_model("road.model");
+			roads[index] = load_model("road.model", road_texture);
 			translate_model(roads[index], start_x, start_y, start_z);
 			rotate_model(roads[index], 1, 1, 1, 90);
 			scale_model(roads[index], 2, 2, 1);
@@ -429,30 +435,75 @@ void init_sim() {
 			}
 			index += 1;
 		}
-		start_x = -30 + 1.2f;
+		start_x = -21.6 + 1.2f;
 		start_z -= 1.2f * 4;
 	}
 	/* Laying horizontal roads */
 
-	/* Laying junctions */
-	start_x = -30;
+	/* Laying junctions and signals */
+	start_x = -21.6;
 	start_z = 10 - 1.2f * 3;
 	start_y = 0.15f;
 	index = 0;
+	unsigned int signal_index = 0;
 	for(int i = 0; i < 4; ++i) {
 		for(int j = 0; j < 10; ++j) {
-			junctions[index] = load_model("junction.model");
+			junctions[index] = load_model("junction.model", junction_texture);
 			translate_model(junctions[index], start_x, start_y, start_z);
 			rotate_model(junctions[index], 1, 0, 0, 90);
 			scale_model(junctions[index], 2, 2, 1);
+			index += 1;
+
+			junctions[index] = load_model("junction.model", junction_texture);
+			translate_model(junctions[index], start_x - 0.75f, start_y, start_z - 0.75f);
+			rotate_model(junctions[index], 1, 0, 0, 90);
+			scale_model(junctions[index], 0.5f, 0.5f, 1);
+			index += 1;
+
+			junctions[index] = load_model("junction.model", junction_texture);
+			translate_model(junctions[index], start_x + 0.75f, start_y, start_z - 0.75f);
+			rotate_model(junctions[index], 1, 0, 0, 90);
+			scale_model(junctions[index], 0.5f, 0.5f, 1);
+			index += 1;
+
+			junctions[index] = load_model("junction.model", junction_texture);
+			translate_model(junctions[index], start_x - 0.75f, start_y, start_z + 0.75f);
+			rotate_model(junctions[index], 1, 0, 0, 90);
+			scale_model(junctions[index], 0.5f, 0.5f, 1);
+			index += 1;
+
+			junctions[index] = load_model("junction.model", junction_texture);
+			translate_model(junctions[index], start_x + 0.75f, start_y, start_z + 0.75f);
+			rotate_model(junctions[index], 1, 0, 0, 90);
+			scale_model(junctions[index], 0.5f, 0.5f, 1);
+			index += 1;
+
+			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
+			translate_model(signals[signal_index], start_x - 0.75f, 0.5f, start_z - 0.75f);
+			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			signal_index += 1;
+
+			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
+			translate_model(signals[signal_index], start_x + 0.75f, 0.5f, start_z - 0.75f);
+			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			signal_index += 1;
+
+			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
+			translate_model(signals[signal_index], start_x - 0.75f, 0.5f, start_z + 0.75f);
+			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			signal_index += 1;
+
+			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
+			translate_model(signals[signal_index], start_x + 0.75f, 0.5f, start_z + 0.75f);
+			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			signal_index += 1;
 
 			start_x += x_by;
-			index += 1;
 		}
-		start_x = -30;
+		start_x = -21.6;
 		start_z -= 1.2f * 4;
 	}
-	/* Laying junctions */
+	/* Laying junctions and signals */
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -512,7 +563,7 @@ void process_command(char* command) {
 	}
 }
 
-Model* load_model(const char* filename) {
+Model* load_model(const char* filename, int texture_id) {
 	FILE *file = NULL;
 	const char* path = "../../data/models/";
 	char final_path[50];
@@ -534,10 +585,6 @@ Model* load_model(const char* filename) {
 		int total_vertices; // OpenGL vertices
 		fscanf(file, "%s", tmp);
 		fscanf(file, "%d", &total_vertices);
-
-		char texture_filename[50];
-		fscanf(file, "%s", tmp);
-		fscanf(file, "%s", texture_filename);
 
 		float *vertices = (float*)malloc(sizeof(float) * total_floats);
 		char c;
@@ -565,10 +612,11 @@ Model* load_model(const char* filename) {
 		fscanf(file, "%f", &depth);
 
 		Model *model = (Model*)malloc(sizeof(Model));
-		make_model(model, shader1, vertices, total_floats, total_vertices, texture_filename, &local_origin, width, height, depth);
+		make_model(model, shader1, texture_id, vertices, total_floats, total_vertices, &local_origin, width, height, depth);
 
 		// printf("\nmodel_loaded %s.\n", filename);
 		free(vertices);
+		fclose(file);
 
 		return model;
 	}

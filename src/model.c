@@ -8,7 +8,7 @@
 extern char* combine_string(const char* str_1, const char* str_2);
 extern const char* assets_path;
 
-void make_model(Model *model, int program, float* vertices, int float_count, int num_opengl_vertices, const char* image_path, Vector3* local_origin, float width, float height, float depth) {
+void make_model(Model *model, int program, int texture_id, float* vertices, int float_count, int num_opengl_vertices, Vector3* local_origin, float width, float height, float depth) {
 	model->program = program;
 	model->num_opengl_vertices = num_opengl_vertices;
 
@@ -23,7 +23,7 @@ void make_model(Model *model, int program, float* vertices, int float_count, int
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	model->texture_id = make_texture(image_path);
+	model->texture_id = texture_id;
 	model->angle_in_degree = 0;
 	model->width = width;
 	model->height = height;
