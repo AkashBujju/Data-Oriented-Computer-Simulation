@@ -9,7 +9,6 @@
 #include <math.h>
 #include "shader.h"
 #include "model.h"
-#include "grid.h"
 #include "text.h"
 #include "cube.h"
 #include "line.h"
@@ -38,7 +37,7 @@ int show_cursor;
 static Font font;
 static Cuboid origin;
 static Line axes[3];
-static Grid grid;
+// static Grid grid;
 
 /* Textures */
 int violet_texture;
@@ -46,7 +45,6 @@ int gray_texture;
 /* Textures */
 
 /* Modes */
-static int toggle_grid = 1;
 /* Modes */
 
 /* Display Text */
@@ -55,6 +53,14 @@ static int input_mode = 0;
 static int show_origin = 1;
 static float zoom_speed = 1.0f;
 /* Display Text */
+
+/* Models */
+#define TOTAL_ROADS 150 + 9 * 3 * 4
+Model *roads[TOTAL_ROADS];
+
+#define TOTAL_JUNCTIONS 40
+Model *junctions[TOTAL_JUNCTIONS];
+/* Models */
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -71,6 +77,7 @@ void append_char(char* str, char c);
 float lerp(float val_1, float val_2, float t);
 float distance(Vector3 *p1, Vector3 *p2);
 int n_lerp(Vector3 *start, Vector3 *current, Vector3 *destination, float *vel, float acc, float dcc, float top_vel);
+void init_sim();
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -154,13 +161,13 @@ int main(int argc, char** argv) {
 	}
 
 	/* Init grid */
-	{
-		make_grid(&grid, 100, 100, 0.2f, 0.2f);
-		translate_grid(&grid, 0, 0, 0);
-		rotate_grid(&grid, 1, 0, 0, 90);
-		rotate_rectangle(&grid.background, 1, 0, 0, 90);
-		scale_rectangle(&grid.background, 10, 10, 10);
-	}
+	// {
+	// 	make_grid(&grid, 100, 100, 0.2f, 0.2f);
+	// 	translate_grid(&grid, 0, 0, 0);
+	// 	rotate_grid(&grid, 1, 0, 0, 90);
+	// 	rotate_rectangle(&grid.background, 1, 0, 0, 90);
+	// 	scale_rectangle(&grid.background, 10, 10, 10);
+	// }
 	/* Init grid */
 
 	/* init view & projection */
@@ -186,47 +193,50 @@ int main(int argc, char** argv) {
 	/* Init font */
 
 	/* Loading models */
-	Model *car_1 = load_model("car_1.model");
-	translate_model(car_1, 0.25f, 0.4f, 0);
-	scale_model(car_1, 0.4f, 0.4f, 0.4f);
+	// Model *car_1 = load_model("car_1.model");
+	// translate_model(car_1, 0.25f, 0.4f, 0);
+	// scale_model(car_1, 0.4f, 0.4f, 0.4f);
 
-	Model *car_2 = load_model("car_2.model");
-	translate_model(car_2, 0.25f, 0.4f, 10);
-	scale_model(car_2, 0.4f, 0.4f, 0.4f);
+	// Model *car_2 = load_model("car_2.model");
+	// translate_model(car_2, 0.25f, 0.4f, 10);
+	// scale_model(car_2, 0.4f, 0.4f, 0.4f);
 
-	Model *road = load_model("road.model");
-	translate_model(road, 0, 0.15f, 0);
-	rotate_model(road, 1, 0, 0, 90);
-	scale_model(road, 2, 2, 1);
+	// Model *road = load_model("road.model");
+	// translate_model(road, 0, 0.15f, 0);
+	// rotate_model(road, 1, 0, 0, 90);
+	// scale_model(road, 2, 2, 1);
+
 	/* Loading models */
+
+	init_sim();
 
 	float fps = 0;
 	float start = clock();
 
-	Car c1, c2;
-	{
-		c1.id = 1;
-		c1.should_stop = 0;
-		c1.current_relax_secs = 0;
-		c1.vel = 0.01;
-		copy_vector(&c1.start_position, &car_1->position);
-		copy_vector(&c1.position, &car_1->position);
-		copy_vector(&c1.to_follow_position, &car_2->position);
+	// Car c1, c2;
+	// {
+	// 	c1.id = 1;
+	// 	c1.should_stop = 0;
+	// 	c1.current_relax_secs = 0;
+	// 	c1.vel = 0.01;
+	// 	copy_vector(&c1.start_position, &car_1->position);
+	// 	copy_vector(&c1.position, &car_1->position);
+	// 	copy_vector(&c1.to_follow_position, &car_2->position);
 
-		c2.id = 2;
-		c2.should_stop = 0;
-		c2.current_relax_secs = 0;
-		c2.vel = 0.01;
-		Vector3 to_follow;
-		copy_vector(&to_follow, &car_2->position);
-		to_follow.z += 50;
-		copy_vector(&c2.start_position, &car_2->position);
-		copy_vector(&c2.position, &car_2->position);
-		copy_vector(&c2.to_follow_position, &to_follow);
-	}
+	// 	c2.id = 2;
+	// 	c2.should_stop = 0;
+	// 	c2.current_relax_secs = 0;
+	// 	c2.vel = 0.01;
+	// 	Vector3 to_follow;
+	// 	copy_vector(&to_follow, &car_2->position);
+	// 	to_follow.z += 50;
+	// 	copy_vector(&c2.start_position, &car_2->position);
+	// 	copy_vector(&c2.position, &car_2->position);
+	// 	copy_vector(&c2.to_follow_position, &to_follow);
+	// }
 
-	Vector3 start_pos;
-	copy_vector(&start_pos, &origin.position);
+	// Vector3 start_pos;
+	// copy_vector(&start_pos, &origin.position);
 
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -236,50 +246,46 @@ int main(int argc, char** argv) {
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		{
-			if((now - c1.current_relax_secs) > 1) {
-				c1.should_stop = 0;
-			}
+		// {
+		// 	if((now - c1.current_relax_secs) > 1) {
+		// 		c1.should_stop = 0;
+		// 	}
 
-			if(!c1.should_stop) {
-				int res = n_lerp(&c1.start_position, &c1.position, &c1.to_follow_position, &c1.vel, 0.001, 0.001, 3);
-				if(res) {
-					c1.current_relax_secs = now;
-					c1.should_stop = 1;
-				}
-				else {
-					c1.position.z += c1.vel;
-				}
-			}
+		// 	if(!c1.should_stop) {
+		// 		int res = n_lerp(&c1.start_position, &c1.position, &c1.to_follow_position, &c1.vel, 0.001, 0.001, 3);
+		// 		if(res) {
+		// 			c1.current_relax_secs = now;
+		// 			c1.should_stop = 1;
+		// 		}
+		// 		else {
+		// 			c1.position.z += c1.vel;
+		// 		}
+		// 	}
 
-			car_2->position.z += 0.005f;
+		// 	copy_vector(&c1.to_follow_position, &car_2->position);
+		// 	c1.to_follow_position.z -= 0.5f;
+		// 	copy_vector(&car_1->position, &c1.position);
+		// }
 
-			copy_vector(&c1.to_follow_position, &car_2->position);
-			c1.to_follow_position.z -= 0.5f;
-			copy_vector(&car_1->position, &c1.position);
-		}
+		// {
+		// 	if((now - c2.current_relax_secs) > 1) {
+		// 		c2.should_stop = 0;
+		// 	}
 
-		{
-			if((now - c2.current_relax_secs) > 1) {
-				c2.should_stop = 0;
-			}
+		// 	if(!c2.should_stop) {
+		// 		int res = n_lerp(&c2.start_position, &c2.position, &c2.to_follow_position, &c2.vel, 0.001, 0.001, 3);
+		// 		if(res) {
+		// 			c2.current_relax_secs = now;
+		// 			c2.should_stop = 1;
+		// 		}
+		// 		else {
+		// 			c2.position.z += c2.vel;
+		// 		}
+		// 	}
 
-			if(!c2.should_stop) {
-				int res = n_lerp(&c2.start_position, &c2.position, &c2.to_follow_position, &c2.vel, 0.001, 0.001, 3);
-				if(res) {
-					c2.current_relax_secs = now;
-					c2.should_stop = 1;
-				}
-				else {
-					c2.position.z += c2.vel;
-					// printf("c2.position: %.3f %.3f %.3f\n", c2.position.x, c2.position.y, c2.position.z);
-					// printf("c2.to_follow_position: %.3f %.3f %.3f\n", c2.to_follow_position.x, c2.to_follow_position.y, c2.to_follow_position.z);
-				}
-			}
-
-			// copy_vector(&c2.to_follow_position, &car_2->position);
-			copy_vector(&car_2->position, &c2.position);
-		}
+		// 	// copy_vector(&c2.to_follow_position, &car_2->position);
+		// 	copy_vector(&car_2->position, &c2.position);
+		// }
 
 		Vector3 pos_plus_front = add(&position, &front);
 		view = look_at(&position, &pos_plus_front, &up);
@@ -344,15 +350,21 @@ int main(int argc, char** argv) {
 			draw_line(&axes[2], &view, &projection);
 		}
 
-		if(toggle_grid) {
-			draw_grid(&grid, &view, &projection);
-		}
-
+		// if(toggle_grid) {
+		// 	draw_grid(&grid, &view, &projection);
+		// }
 
 		{
-			draw_model(car_1, &view, &projection);
-			draw_model(car_2, &view, &projection);
-			draw_model(road, &view, &projection);
+			// draw_model(car_1, &view, &projection);
+			// draw_model(car_2, &view, &projection);
+			// draw_model(road, &view, &projection);
+
+			for(int i = 0; i < TOTAL_ROADS; ++i) {
+				draw_model(roads[i], &view, &projection);
+			}
+			for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
+				draw_model(junctions[i], &view, &projection);
+			}
 		}
 
 		glfwSwapBuffers(window);
@@ -369,6 +381,78 @@ int main(int argc, char** argv) {
 
 	printf("Ended.\n");
 	return 0;
+}
+
+void init_sim() {
+	float start_x = -30;
+	float start_z = 10;
+	float start_y = 0.15f;
+	float x_by = 1.2f * 4;
+
+	/* Laying vertical roads */
+	unsigned int index = 0;
+	for(int i = 1; i <= 15; ++i) {
+		for(int j = 0; j < 10; ++j) {
+			roads[index] = load_model("road.model");
+			translate_model(roads[index], start_x, start_y, start_z);
+			rotate_model(roads[index], 1, 0, 0, 90);
+			scale_model(roads[index], 2, 2, 1);
+
+			start_x += x_by;
+			index += 1;
+		}
+
+		start_x = -30;
+		if(i % 3 == 0) {
+			start_z -= 2.4f;
+		}
+		else {
+			start_z -= 1.2f;
+		}
+	}
+	/* Laying vertical roads */
+
+	/* Laying horizontal roads */
+	start_x = -30 + 1.2f;
+	start_z = 10 - 1.2f * 3;
+	start_y = 0.15f;
+	for(int i = 1; i <= 4; ++i) {
+		for(int j = 1; j <= 27; ++j) {
+			roads[index] = load_model("road.model");
+			translate_model(roads[index], start_x, start_y, start_z);
+			rotate_model(roads[index], 1, 1, 1, 90);
+			scale_model(roads[index], 2, 2, 1);
+			
+			start_x += 1.2f;
+			if(j % 3 == 0) {
+				start_x += 1.2f;
+			}
+			index += 1;
+		}
+		start_x = -30 + 1.2f;
+		start_z -= 1.2f * 4;
+	}
+	/* Laying horizontal roads */
+
+	/* Laying junctions */
+	start_x = -30;
+	start_z = 10 - 1.2f * 3;
+	start_y = 0.15f;
+	index = 0;
+	for(int i = 0; i < 4; ++i) {
+		for(int j = 0; j < 10; ++j) {
+			junctions[index] = load_model("junction.model");
+			translate_model(junctions[index], start_x, start_y, start_z);
+			rotate_model(junctions[index], 1, 0, 0, 90);
+			scale_model(junctions[index], 2, 2, 1);
+
+			start_x += x_by;
+			index += 1;
+		}
+		start_x = -30;
+		start_z -= 1.2f * 4;
+	}
+	/* Laying junctions */
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -400,9 +484,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glfwSetCursorPosCallback(window, mouse_callback);
 		}
 	}
-	else if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-		toggle_grid = !toggle_grid;
-	}
+	// else if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+	// 	toggle_grid = !toggle_grid;
+	// }
 }
 
 void process_command(char* command) {
@@ -483,7 +567,7 @@ Model* load_model(const char* filename) {
 		Model *model = (Model*)malloc(sizeof(Model));
 		make_model(model, shader1, vertices, total_floats, total_vertices, texture_filename, &local_origin, width, height, depth);
 
-		printf("\nmodel_loaded %s.\n", filename);
+		// printf("\nmodel_loaded %s.\n", filename);
 		free(vertices);
 
 		return model;

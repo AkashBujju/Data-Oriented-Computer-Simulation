@@ -15,4 +15,4 @@ texture_file_name ../../data/png/road.png
 -0.30,-0.30,0.10,0.36,0.70 -0.30,-0.30,-0.10,0.42,0.70 -0.30,0.30,-0.10,0.42,0.98
 bounding_box
 local_origin 0.00,0.00,0.00
-width 0.60 height 0.20 depth 0.60
+width 0.60 height 0.60 depth 0.20
