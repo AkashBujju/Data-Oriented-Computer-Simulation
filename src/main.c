@@ -12,45 +12,8 @@
 #include "text.h"
 #include "cube.h"
 #include "line.h"
-
-typedef struct Car {
-	int id;
-	Vector3 position;
-	Vector3 start_position;
-	Vector3 to_follow_position;
-	float should_stop;
-	float current_relax_secs;
-	float vel;
-} Car;
-
-typedef struct Road {
-	int id;
-	int left_lane_id;
-	int right_lane_id;
-	int to_forward_id;
-	int to_backward_id;
-	Vector3 position;
-} Road;
-
-typedef struct Junction {
-	int id;
-	int to_left_id;
-	int to_right_id;
-	int to_up_id;
-	int to_down_id;
-	int to_top_left_signal_id;
-	int to_down_left_signal_id;
-	int to_top_right_signal_id;
-	int to_down_right_signal_id;
-	Vector3 position;
-} Junction;
-
-typedef struct Signal {
-	int id;
-	int main_junction_id;
-	Vector3 position;
-} Signal;
-
+#include "sim.h"
+#include "hash_table.h"
 
 unsigned int window_width = 400;
 unsigned int window_height = 400;
@@ -88,16 +51,23 @@ static float zoom_speed = 1.0f;
 
 /* Models */
 #define TOTAL_ROADS 150 + 9 * 3 * 4
+#define ROADS_LIMIT 512
 Model *roads[TOTAL_ROADS];
-Road _roads[TOTAL_ROADS];
+Road _roads[ROADS_LIMIT];
+unsigned int road_keys[ROADS_LIMIT];
 
 #define TOTAL_JUNCTIONS 40 * 5
+#define TOTAL_WORKING_JUNCTIONS 40
+#define JUNCTIONS_LIMIT 256
 Model *junctions[TOTAL_JUNCTIONS];
-Junction _junctions[TOTAL_JUNCTIONS];
+Junction _junctions[JUNCTIONS_LIMIT];
+unsigned int junction_keys[JUNCTIONS_LIMIT];
 
 #define TOTAL_SIGNALS 40 * 4
+#define SIGNALS_LIMIT 256
 Model *signals[TOTAL_SIGNALS];
-Signal _signals[TOTAL_SIGNALS];
+Signal _signals[SIGNALS_LIMIT];
+unsigned int signal_keys[SIGNALS_LIMIT];
 /* Models */
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -429,31 +399,33 @@ void init_sim() {
 	unsigned int current_index = 0;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 15; ++j) {
-			_roads[current_index].id = current_id;
-			_roads[current_index].left_lane_id = current_id + 1;
-			_roads[current_index].right_lane_id = current_id + 2;
+			Road road;
+			road.id = current_id;
+			road.left_lane_id = current_id + 1;
+			road.right_lane_id = current_id + 2;
 
 			if(j == 1) {
-				_roads[current_index].to_forward_id = current_id + 3;
-				_roads[current_index].to_backward_id = -1;
+				road.to_forward_id = current_id + 3;
+				road.to_backward_id = -1;
 			}
 			else if(j == 10) {
-				_roads[current_index].to_forward_id = -1;
-				_roads[current_index].to_backward_id = current_id - 3;
+				road.to_forward_id = -1;
+				road.to_backward_id = current_id - 3;
 			}
 			else if(j % 3 == 0) {
-				_roads[current_index].to_forward_id = (j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
-				_roads[current_index].to_backward_id = current_id - 3;
+				road.to_forward_id = (j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
+				road.to_backward_id = current_id - 3;
 			}
 			else if(j != 1 && (j - 1) % 3 == 0) {
-				_roads[current_index].to_backward_id = floor(j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
-				_roads[current_index].to_forward_id = current_id + 3;
+				road.to_backward_id = floor(j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
+				road.to_forward_id = current_id + 3;
 			}
 			else {
-				_roads[current_index].to_forward_id = current_id + 3;
-				_roads[current_index].to_backward_id = current_id - 3;
+				road.to_forward_id = current_id + 3;
+				road.to_backward_id = current_id - 3;
 			}
 
+			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
 			current_id += 3;
 			current_index += 1;
 		}
@@ -463,26 +435,28 @@ void init_sim() {
 	/* CONNECT ID ROADS HORIZONTALLY */
 	for(int i = 1; i <= 4; ++i) {
 		for(int j = 1; j <= 27; ++j) {
-			_roads[current_index].id = current_id;
-			_roads[current_index].left_lane_id = current_id + 1;
-			_roads[current_index].right_lane_id = current_id + 2;
+			Road road;
+			road.id = current_id;
+			road.left_lane_id = current_id + 1;
+			road.right_lane_id = current_id + 2;
 
 			if(j == 1 || (j - 1) % 3 == 0) {
-				_roads[current_index].to_forward_id = current_id + 3;
+				road.to_forward_id = current_id + 3;
 				if(j == 1)
-					_roads[current_index].to_backward_id = 1 + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+					road.to_backward_id = 1 + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
 				else
-					_roads[current_index].to_backward_id = floor(j / 3) + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+					road.to_backward_id = floor(j / 3) + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
 			}
 			else if(j % 3 == 0) {
-				_roads[current_index].to_forward_id = floor(j / 3) + (i - 1) * 10;
-				_roads[current_index].to_backward_id = current_id - 3;
+				road.to_forward_id = floor(j / 3) + (i - 1) * 10;
+				road.to_backward_id = current_id - 3;
 			}
 			else {
-				_roads[current_index].to_forward_id = current_id + 3;
-				_roads[current_index].to_backward_id = current_id - 3;
+				road.to_forward_id = current_id + 3;
+				road.to_backward_id = current_id - 3;
 			}
 
+			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
 			current_id += 3;
 			current_index += 1;
 		}
@@ -497,25 +471,27 @@ void init_sim() {
 	unsigned int current_signal_id = 1;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 4; ++j) {
-			_junctions[current_index].id = current_id;
-			_junctions[current_index].to_up_id = vertical_road_start_id + 3;
-			_junctions[current_index].to_down_id = vertical_road_start_id;
-			_junctions[current_index].to_right_id = horizontal_road_start_id;
-			_junctions[current_index].to_left_id = horizontal_road_start_id - 3;
+			Junction junction;
+			junction.id = current_id;
+			junction.to_up_id = vertical_road_start_id + 3;
+			junction.to_down_id = vertical_road_start_id;
+			junction.to_right_id = horizontal_road_start_id;
+			junction.to_left_id = horizontal_road_start_id - 3;
 			
 			// @Note: The signal are placed TL-TR-BL-BR from the starting from the top-left
-			_junctions[current_index].to_top_left_signal_id = current_signal_id;
-			_junctions[current_index].to_top_right_signal_id = current_signal_id + 1;
-			_junctions[current_index].to_down_left_signal_id = current_signal_id + 2;
-			_junctions[current_index].to_down_right_signal_id = current_signal_id + 3;
+			junction.to_top_left_signal_id = current_signal_id;
+			junction.to_top_right_signal_id = current_signal_id + 1;
+			junction.to_down_left_signal_id = current_signal_id + 2;
+			junction.to_down_right_signal_id = current_signal_id + 3;
 
 			if(j == 1) {
-				_junctions[current_index].to_left_id = -1;
+				junction.to_left_id = -1;
 			}
 			else if(j == 10) {
-				_junctions[current_index].to_right_id = -1;
+				junction.to_right_id = -1;
 			}
 
+			put_junction(junction_keys, _junctions, current_id, &junction, JUNCTIONS_LIMIT);
 			current_id += 1;
 			current_index += 1;
 			current_signal_id += 4;
@@ -532,18 +508,25 @@ void init_sim() {
 	unsigned int current_junction_id = 1;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 4; ++j) {
-			_signals[current_index].id = current_signal_id;
-			_signals[current_index + 1].id = current_signal_id + 1;
-			_signals[current_index + 2].id = current_signal_id + 2;
-			_signals[current_index + 3].id = current_signal_id + 3;
+			Signal signal_1, signal_2, signal_3, signal_4;
+			signal_1.id = current_signal_id;
+			signal_2.id = current_signal_id + 1;
+			signal_3.id = current_signal_id + 2;
+			signal_4.id = current_signal_id + 3;
 
-			_signals[current_index].main_junction_id = current_junction_id;
-			_signals[current_index + 1].main_junction_id = current_junction_id;
-			_signals[current_index + 2].main_junction_id = current_junction_id;
-			_signals[current_index + 3].main_junction_id = current_junction_id;
+			signal_1.main_junction_id = current_junction_id;
+			signal_2.main_junction_id = current_junction_id;
+			signal_3.main_junction_id = current_junction_id;
+			signal_4.main_junction_id = current_junction_id;
+
+			put_signal(signal_keys, _signals, current_signal_id, &signal_1, SIGNALS_LIMIT);
+			put_signal(signal_keys, _signals, current_signal_id + 1, &signal_2, SIGNALS_LIMIT);
+			put_signal(signal_keys, _signals, current_signal_id + 2, &signal_3, SIGNALS_LIMIT);
+			put_signal(signal_keys, _signals, current_signal_id + 3, &signal_4, SIGNALS_LIMIT);
 
 			current_index += 4;
 			current_signal_id += 4;
+			current_junction_id += 1;
 		}
 	}
 	/* CONNECT SIGNAL TO JUNCTIONS */
@@ -668,13 +651,16 @@ void init_sim() {
 
 	/* Copying position from Model to _models */
 	for(int i = 0; i < TOTAL_ROADS; ++i) {
-		copy_vector(&_roads[i].position, &roads[i]->position);
+		Road *road = get_road(road_keys, _roads, 1 + 3 * i, ROADS_LIMIT);
+		copy_vector(&road->position, &roads[i]->position);
 	}
-	for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
-		copy_vector(&_junctions[i].position, &junctions[i]->position);
+	for(int i = 0; i < TOTAL_WORKING_JUNCTIONS; ++i) {
+		Junction *junction = get_junction(junction_keys, _junctions, i + 1, JUNCTIONS_LIMIT);
+		copy_vector(&junction->position, &junctions[i]->position);
 	}
 	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
-		copy_vector(&_signals[i].position, &signals[i]->position);
+		Signal *signal= get_signal(signal_keys, _signals, i + 1, SIGNALS_LIMIT);
+		copy_vector(&signal->position, &signals[i]->position);
 	}
 	/* Copying position from Model to _models */
 }
