@@ -23,6 +23,35 @@ typedef struct Car {
 	float vel;
 } Car;
 
+typedef struct Road {
+	int id;
+	int left_lane_id;
+	int right_lane_id;
+	int to_forward_id;
+	int to_backward_id;
+	Vector3 position;
+} Road;
+
+typedef struct Junction {
+	int id;
+	int to_left_id;
+	int to_right_id;
+	int to_up_id;
+	int to_down_id;
+	int to_top_left_signal_id;
+	int to_down_left_signal_id;
+	int to_top_right_signal_id;
+	int to_down_right_signal_id;
+	Vector3 position;
+} Junction;
+
+typedef struct Signal {
+	int id;
+	int main_junction_id;
+	Vector3 position;
+} Signal;
+
+
 unsigned int window_width = 400;
 unsigned int window_height = 400;
 Matrix4 view, projection, text_projection;
@@ -60,12 +89,15 @@ static float zoom_speed = 1.0f;
 /* Models */
 #define TOTAL_ROADS 150 + 9 * 3 * 4
 Model *roads[TOTAL_ROADS];
+Road _roads[TOTAL_ROADS];
 
 #define TOTAL_JUNCTIONS 40 * 5
 Model *junctions[TOTAL_JUNCTIONS];
+Junction _junctions[TOTAL_JUNCTIONS];
 
 #define TOTAL_SIGNALS 40 * 4
 Model *signals[TOTAL_SIGNALS];
+Signal _signals[TOTAL_SIGNALS];
 /* Models */
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -94,6 +126,8 @@ int main(int argc, char** argv) {
 		printf("1: windowed\\fullscreen\n");
 		return 0;
 	}
+
+	printf("Main called\n");
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -215,7 +249,7 @@ int main(int argc, char** argv) {
 
 
 	float fps = 0;
-	float start = clock();
+	// float start = clock();
 
 	// Car c1, c2;
 	// {
@@ -245,7 +279,7 @@ int main(int argc, char** argv) {
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		float before = clock();
-		float now = (clock() - start) / CLOCKS_PER_SEC;
+		// float now = (clock() - start) / CLOCKS_PER_SEC;
 
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -390,6 +424,130 @@ int main(int argc, char** argv) {
 }
 
 void init_sim() {
+	/* CONNECT ID ROADS VERTICALLY */
+	unsigned int current_id = 1;
+	unsigned int current_index = 0;
+	for(int i = 1; i <= 10; ++i) {
+		for(int j = 1; j <= 15; ++j) {
+			_roads[current_index].id = current_id;
+			_roads[current_index].left_lane_id = current_id + 1;
+			_roads[current_index].right_lane_id = current_id + 2;
+
+			if(j == 1) {
+				_roads[current_index].to_forward_id = current_id + 3;
+				_roads[current_index].to_backward_id = -1;
+			}
+			else if(j == 10) {
+				_roads[current_index].to_forward_id = -1;
+				_roads[current_index].to_backward_id = current_id - 3;
+			}
+			else if(j % 3 == 0) {
+				_roads[current_index].to_forward_id = (j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
+				_roads[current_index].to_backward_id = current_id - 3;
+			}
+			else if(j != 1 && (j - 1) % 3 == 0) {
+				_roads[current_index].to_backward_id = floor(j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
+				_roads[current_index].to_forward_id = current_id + 3;
+			}
+			else {
+				_roads[current_index].to_forward_id = current_id + 3;
+				_roads[current_index].to_backward_id = current_id - 3;
+			}
+
+			current_id += 3;
+			current_index += 1;
+		}
+	}
+	/* CONNECT ID ROADS VERTICALLY */
+
+	/* CONNECT ID ROADS HORIZONTALLY */
+	for(int i = 1; i <= 4; ++i) {
+		for(int j = 1; j <= 27; ++j) {
+			_roads[current_index].id = current_id;
+			_roads[current_index].left_lane_id = current_id + 1;
+			_roads[current_index].right_lane_id = current_id + 2;
+
+			if(j == 1 || (j - 1) % 3 == 0) {
+				_roads[current_index].to_forward_id = current_id + 3;
+				if(j == 1)
+					_roads[current_index].to_backward_id = 1 + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+				else
+					_roads[current_index].to_backward_id = floor(j / 3) + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+			}
+			else if(j % 3 == 0) {
+				_roads[current_index].to_forward_id = floor(j / 3) + (i - 1) * 10;
+				_roads[current_index].to_backward_id = current_id - 3;
+			}
+			else {
+				_roads[current_index].to_forward_id = current_id + 3;
+				_roads[current_index].to_backward_id = current_id - 3;
+			}
+
+			current_id += 3;
+			current_index += 1;
+		}
+	}
+	/* CONNECT ID ROADS HORIZONTALLY */
+
+	/* CONNECT ID JUNCTIONS TO ROADS */
+	current_index = 0;
+	current_id = 1;
+	unsigned int vertical_road_start_id = 7; // @Hardcoded
+	unsigned int horizontal_road_start_id = 150 * 3 + 1; // @Hardcoded
+	unsigned int current_signal_id = 1;
+	for(int i = 1; i <= 10; ++i) {
+		for(int j = 1; j <= 4; ++j) {
+			_junctions[current_index].id = current_id;
+			_junctions[current_index].to_up_id = vertical_road_start_id + 3;
+			_junctions[current_index].to_down_id = vertical_road_start_id;
+			_junctions[current_index].to_right_id = horizontal_road_start_id;
+			_junctions[current_index].to_left_id = horizontal_road_start_id - 3;
+			
+			// @Note: The signal are placed TL-TR-BL-BR from the starting from the top-left
+			_junctions[current_index].to_top_left_signal_id = current_signal_id;
+			_junctions[current_index].to_top_right_signal_id = current_signal_id + 1;
+			_junctions[current_index].to_down_left_signal_id = current_signal_id + 2;
+			_junctions[current_index].to_down_right_signal_id = current_signal_id + 3;
+
+			if(j == 1) {
+				_junctions[current_index].to_left_id = -1;
+			}
+			else if(j == 10) {
+				_junctions[current_index].to_right_id = -1;
+			}
+
+			current_id += 1;
+			current_index += 1;
+			current_signal_id += 4;
+			vertical_road_start_id += 15 * 3; // @Hardcoded
+			horizontal_road_start_id += 9; // @Hardcoded
+		}
+		vertical_road_start_id = 7 + (i - 1) * 9;  // @Hardcoded
+	}
+	/* CONNECT ID JUNCTIONS TO ROADS */
+
+	/* CONNECT SIGNAL TO JUNCTIONS */
+	current_index = 0;
+	current_signal_id = 1;
+	unsigned int current_junction_id = 1;
+	for(int i = 1; i <= 10; ++i) {
+		for(int j = 1; j <= 4; ++j) {
+			_signals[current_index].id = current_signal_id;
+			_signals[current_index + 1].id = current_signal_id + 1;
+			_signals[current_index + 2].id = current_signal_id + 2;
+			_signals[current_index + 3].id = current_signal_id + 3;
+
+			_signals[current_index].main_junction_id = current_junction_id;
+			_signals[current_index + 1].main_junction_id = current_junction_id;
+			_signals[current_index + 2].main_junction_id = current_junction_id;
+			_signals[current_index + 3].main_junction_id = current_junction_id;
+
+			current_index += 4;
+			current_signal_id += 4;
+		}
+	}
+	/* CONNECT SIGNAL TO JUNCTIONS */
+
 	float start_x = -21.6;
 	float start_z = 10;
 	float start_y = 0.15f;
@@ -397,24 +555,23 @@ void init_sim() {
 
 	/* Laying vertical roads */
 	unsigned int index = 0;
-	for(int i = 1; i <= 15; ++i) {
-		for(int j = 0; j < 10; ++j) {
+	for(int i = 1; i <= 10; ++i) {
+		for(int j = 1; j <= 15; ++j) {
 			roads[index] = load_model("road.model", road_texture);
 			translate_model(roads[index], start_x, start_y, start_z);
 			rotate_model(roads[index], 1, 0, 0, 90);
 			scale_model(roads[index], 2, 2, 1);
 
-			start_x += x_by;
+			if(j % 3 == 0)
+				start_z -= 2.4f;
+			else
+				start_z -= 1.2f;
+
 			index += 1;
 		}
 
-		start_x = -21.6;
-		if(i % 3 == 0) {
-			start_z -= 2.4f;
-		}
-		else {
-			start_z -= 1.2f;
-		}
+		start_x += x_by;
+		start_z = 10;
 	}
 	/* Laying vertical roads */
 
@@ -446,8 +603,8 @@ void init_sim() {
 	start_y = 0.15f;
 	index = 0;
 	unsigned int signal_index = 0;
-	for(int i = 0; i < 4; ++i) {
-		for(int j = 0; j < 10; ++j) {
+	for(int i = 0; i < 10; ++i) {
+		for(int j = 0; j < 4; ++j) {
 			junctions[index] = load_model("junction.model", junction_texture);
 			translate_model(junctions[index], start_x, start_y, start_z);
 			rotate_model(junctions[index], 1, 0, 0, 90);
@@ -486,24 +643,40 @@ void init_sim() {
 			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
 			translate_model(signals[signal_index], start_x + 0.75f, 0.5f, start_z - 0.75f);
 			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			rotate_model(signals[signal_index], 0, 1, 0, 90);
 			signal_index += 1;
 
 			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
 			translate_model(signals[signal_index], start_x - 0.75f, 0.5f, start_z + 0.75f);
 			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			rotate_model(signals[signal_index], 0, 1, 0, -90);
 			signal_index += 1;
 
 			signals[signal_index] = load_model("signal_red.model", signal_red_texture);
 			translate_model(signals[signal_index], start_x + 0.75f, 0.5f, start_z + 0.75f);
 			scale_model(signals[signal_index], 0.25f, 0.25f, 0.25f);
+			rotate_model(signals[signal_index], 0, 1, 0, 180);
 			signal_index += 1;
 
-			start_x += x_by;
+			start_z -= 1.2f * 4;
 		}
-		start_x = -21.6;
-		start_z -= 1.2f * 4;
+
+		start_x += 1.2f * 4;
+		start_z = 10 - 1.2f * 3;
 	}
 	/* Laying junctions and signals */
+
+	/* Copying position from Model to _models */
+	for(int i = 0; i < TOTAL_ROADS; ++i) {
+		copy_vector(&_roads[i].position, &roads[i]->position);
+	}
+	for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
+		copy_vector(&_junctions[i].position, &junctions[i]->position);
+	}
+	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
+		copy_vector(&_signals[i].position, &signals[i]->position);
+	}
+	/* Copying position from Model to _models */
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
