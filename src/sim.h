@@ -14,8 +14,7 @@ typedef struct Car {
 } Car;
 
 typedef struct Road {
-	int id;
-	int left_lane_id;
+	int left_lane_id; // @Note: This is the Road id.
 	int right_lane_id;
 	int to_forward_id;
 	int to_backward_id;

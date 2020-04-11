@@ -203,6 +203,7 @@ int main(int argc, char** argv) {
 	FT_Library ft;
 	init_freetype(&ft);
 	init_font(&font, combine_string(assets_path, "fonts/consolas.ttf"), &ft);
+
 	/* Init font */
 
 	/* Loading models */
@@ -397,36 +398,36 @@ void init_sim() {
 	/* CONNECT ID ROADS VERTICALLY */
 	unsigned int current_id = 1;
 	unsigned int current_index = 0;
+	const unsigned int start_junction_id = 1 + (2 * (TOTAL_ROADS - 1)) + 2;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 15; ++j) {
 			Road road;
-			road.id = current_id;
-			road.left_lane_id = current_id + 1;
-			road.right_lane_id = current_id + 2;
+			road.left_lane_id = current_id;
+			road.right_lane_id = current_id + 1;
 
 			if(j == 1) {
-				road.to_forward_id = current_id + 3;
+				road.to_forward_id = current_id + 2;
 				road.to_backward_id = -1;
 			}
 			else if(j == 10) {
 				road.to_forward_id = -1;
-				road.to_backward_id = current_id - 3;
+				road.to_backward_id = current_id - 2;
 			}
 			else if(j % 3 == 0) {
-				road.to_forward_id = (j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
-				road.to_backward_id = current_id - 3;
+				road.to_forward_id = start_junction_id + (j / 3) + ((i - 1) * 4) - 1; // @Note: '4' is the number of junction 'rows'.
+				road.to_backward_id = current_id - 2;
 			}
 			else if(j != 1 && (j - 1) % 3 == 0) {
-				road.to_backward_id = floor(j / 3) + ((i - 1) * 4); // @Note: '4' is the number of junction 'rows'.
-				road.to_forward_id = current_id + 3;
+				road.to_backward_id = start_junction_id + floor(j / 3) + ((i - 1) * 4) - 1; // @Note: '4' is the number of junction 'rows'.
+				road.to_forward_id = current_id + 2;
 			}
 			else {
-				road.to_forward_id = current_id + 3;
-				road.to_backward_id = current_id - 3;
+				road.to_forward_id = current_id + 2;
+				road.to_backward_id = current_id - 2;
 			}
 
 			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
-			current_id += 3;
+			current_id += 2;
 			current_index += 1;
 		}
 	}
@@ -436,28 +437,27 @@ void init_sim() {
 	for(int i = 1; i <= 4; ++i) {
 		for(int j = 1; j <= 27; ++j) {
 			Road road;
-			road.id = current_id;
-			road.left_lane_id = current_id + 1;
-			road.right_lane_id = current_id + 2;
+			road.left_lane_id = current_id;
+			road.right_lane_id = current_id + 1;
 
 			if(j == 1 || (j - 1) % 3 == 0) {
-				road.to_forward_id = current_id + 3;
+				road.to_forward_id = current_id + 2;
 				if(j == 1)
-					road.to_backward_id = 1 + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+					road.to_backward_id = start_junction_id + i - 1;
 				else
-					road.to_backward_id = floor(j / 3) + (i - 1) * 10; // @Note: '10' is the number if junction 'columns'.
+					road.to_backward_id = start_junction_id + (floor(j / 3) * 4 + 1) + (i - 1) * 10 - 1; // @Note: '10' is the number of junction 'columns'. '4' is the number of junction 'rows'.
 			}
 			else if(j % 3 == 0) {
-				road.to_forward_id = floor(j / 3) + (i - 1) * 10;
-				road.to_backward_id = current_id - 3;
+				road.to_forward_id = start_junction_id + ((j / 3) * 4 + 1) + (i - 1) * 10 - 1; // @Note: '10' is the number of junction 'columns'. '4' is the number of junction 'rows'.
+				road.to_backward_id = current_id - 2;
 			}
 			else {
-				road.to_forward_id = current_id + 3;
-				road.to_backward_id = current_id - 3;
+				road.to_forward_id = current_id + 2;
+				road.to_backward_id = current_id - 2;
 			}
 
 			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
-			current_id += 3;
+			current_id += 2;
 			current_index += 1;
 		}
 	}
@@ -465,20 +465,21 @@ void init_sim() {
 
 	/* CONNECT ID JUNCTIONS TO ROADS */
 	current_index = 0;
-	current_id = 1;
-	unsigned int vertical_road_start_id = 7; // @Hardcoded
-	unsigned int horizontal_road_start_id = 150 * 3 + 1; // @Hardcoded
-	unsigned int current_signal_id = 1;
+	current_id = start_junction_id;
+	unsigned int vertical_road_start_id = 5; // @Hardcoded
+	unsigned int horizontal_road_start_id = 150 * 2 + 1; // @Hardcoded
+	const unsigned int start_signal_id = start_junction_id + TOTAL_WORKING_JUNCTIONS;
+	unsigned int current_signal_id = start_signal_id;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 4; ++j) {
 			Junction junction;
 			junction.id = current_id;
-			junction.to_up_id = vertical_road_start_id + 3;
+			junction.to_up_id = vertical_road_start_id + 2;
 			junction.to_down_id = vertical_road_start_id;
 			junction.to_right_id = horizontal_road_start_id;
-			junction.to_left_id = horizontal_road_start_id - 3;
+			junction.to_left_id = horizontal_road_start_id - 2;
 			
-			// @Note: The signal are placed TL-TR-BL-BR from the starting from the top-left
+			// @Note: The signals are placed TL-TR-BL-BR from the starting from the top-left
 			junction.to_top_left_signal_id = current_signal_id;
 			junction.to_top_right_signal_id = current_signal_id + 1;
 			junction.to_down_left_signal_id = current_signal_id + 2;
@@ -495,17 +496,19 @@ void init_sim() {
 			current_id += 1;
 			current_index += 1;
 			current_signal_id += 4;
-			vertical_road_start_id += 15 * 3; // @Hardcoded
-			horizontal_road_start_id += 9; // @Hardcoded
+			vertical_road_start_id += 6; // @Hardcoded
+			if(j != 1) {
+				horizontal_road_start_id += 9 * 6; // @Hardcoded
+			}
 		}
-		vertical_road_start_id = 7 + (i - 1) * 9;  // @Hardcoded
+		horizontal_road_start_id = (150 * 2 + 1) + (i * 6); // @Hardcoded
 	}
 	/* CONNECT ID JUNCTIONS TO ROADS */
 
 	/* CONNECT SIGNAL TO JUNCTIONS */
 	current_index = 0;
-	current_signal_id = 1;
-	unsigned int current_junction_id = 1;
+	current_signal_id = start_signal_id;
+	unsigned int current_junction_id = start_junction_id;
 	for(int i = 1; i <= 10; ++i) {
 		for(int j = 1; j <= 4; ++j) {
 			Signal signal_1, signal_2, signal_3, signal_4;
@@ -650,19 +653,73 @@ void init_sim() {
 	/* Laying junctions and signals */
 
 	/* Copying position from Model to _models */
+	current_id = 1; // @Note: We need this to find the number of rows and columns of the matrix.
 	for(int i = 0; i < TOTAL_ROADS; ++i) {
-		Road *road = get_road(road_keys, _roads, 1 + 3 * i, ROADS_LIMIT);
+		Road *road = get_road(road_keys, _roads, current_id, ROADS_LIMIT);
 		copy_vector(&road->position, &roads[i]->position);
+		current_id += 2;
 	}
 	for(int i = 0; i < TOTAL_WORKING_JUNCTIONS; ++i) {
-		Junction *junction = get_junction(junction_keys, _junctions, i + 1, JUNCTIONS_LIMIT);
+		Junction *junction = get_junction(junction_keys, _junctions, current_id, JUNCTIONS_LIMIT);
 		copy_vector(&junction->position, &junctions[i]->position);
+		current_id += 1;
 	}
 	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
-		Signal *signal= get_signal(signal_keys, _signals, i + 1, SIGNALS_LIMIT);
+		Signal *signal= get_signal(signal_keys, _signals, current_id, SIGNALS_LIMIT);
 		copy_vector(&signal->position, &signals[i]->position);
+		current_id += 1;
 	}
 	/* Copying position from Model to _models */
+
+	/* Filling the matrix */
+	// @Note: We are not including the side junctions and signals in the matrix, as they are useless in pathfinding.
+	const unsigned int num_rows = 1 + (TOTAL_ROADS) * 2 + TOTAL_WORKING_JUNCTIONS; // @Note: We ignore the first row and column of the matrix. Added '1'.
+	int **matrix = (int**)malloc(sizeof(int*) * num_rows);
+	current_id = 1;
+
+	// Setting all indices to '0'
+	for(unsigned int i = 0; i < num_rows; ++i) {
+		matrix[i] = (int*)malloc(sizeof(int) * num_rows);
+		for(unsigned int j = 0; j < num_rows; ++j) {
+			matrix[i][j] = 0;
+		}
+	}
+
+	for(int i = 0; i < TOTAL_ROADS; ++i) {
+		Road *road = get_road(road_keys, _roads, current_id, ROADS_LIMIT);
+		if(road->left_lane_id != -1) {
+			matrix[road->left_lane_id][road->to_forward_id] = 1;
+		}
+		if(road->right_lane_id != -1) {
+			matrix[road->right_lane_id][road->to_forward_id] = 1;
+		}
+		current_id += 2;
+	}
+	for(int i = 0; i < TOTAL_WORKING_JUNCTIONS; ++i) {
+		Junction *junction = get_junction(junction_keys, _junctions, current_id, JUNCTIONS_LIMIT);
+		if(junction->to_left_id != -1) {
+			matrix[junction->id][junction->to_left_id] = 1;
+		}
+		if(junction->to_right_id != -1) {
+			matrix[junction->id][junction->to_right_id] = 1;
+		}
+		matrix[junction->id][junction->to_up_id] = 1;
+		matrix[junction->id][junction->to_down_id] = 1;
+		current_id += 1;
+	}
+
+	FILE *file = fopen("matrix.txt", "w");
+	for(int i = 0; i < num_rows; ++i) {
+		for(int j = 0; j < num_rows; ++j) {
+			fprintf(file, "%d,", matrix[i][j]);
+		}
+		fprintf(file, "\n");
+	}
+	fclose(file);
+	
+	free(matrix); // @Note: We are not freeing the who memory. For some reason free matrix[i] crashes!
+	
+	/* Filling the matrix */
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
