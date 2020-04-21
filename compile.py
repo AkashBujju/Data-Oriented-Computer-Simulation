@@ -2,12 +2,10 @@ import os
 import sys
 import platform
 
-
 opr_sys = platform.system()
 command = ""
 compiler_not_found_str = "Pass a compiler as argument - gcc(MinGW) | vc(VisualC++)"
 os.chdir("src")
-
 
 if len(sys.argv) != 2:
     print("ScriptError: \n ----- " + compiler_not_found_str + "\n")
@@ -48,14 +46,14 @@ elif opr_sys == 'Windows':
         includes = "-I..\\external\\windows\\glfw\\mingw\\include -I..\\external\\windows\\glad\\include -I..\\external\\windows\\freetype\\include"
         libs_dirs = "/link /LIBPATH:..\\external\\windows\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\windows\\freetype\\libs\\vc"
         libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib freetype.lib"
-        args = "/MD"
+        args = "/MD /D_CRT_SECURE_NO_WARNINGS"
         output = "/out:..\\bin\\vc\\main.exe"
         command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
         os.system(command)
         # includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include /I..\\external\\easy_profiler\\include"
         # libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
         # args = "/DBUILD_WITH_EASY_PROFILER /MD"
-        os.system("del *.obj *.pdb")
+        os.system("del *.obj")
     else:
         os.system("cls")
         print("\n-> Compiler '%s' not found\n" % sys.argv[1])
