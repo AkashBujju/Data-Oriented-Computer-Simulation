@@ -43,8 +43,8 @@ elif opr_sys == 'Windows':
         cc = "cl"
         filenames = "*.c"
         external_files = "..\\external\\windows\\stb_image.c ..\\external\\windows\\glad.c"
-        includes = "-I..\\external\\windows\\glfw\\mingw\\include -I..\\external\\windows\\glad\\include -I..\\external\\windows\\freetype\\include"
-        libs_dirs = "/link /LIBPATH:..\\external\\windows\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\windows\\freetype\\libs\\vc"
+        includes = "-I..\\external\\windows\\glfw\\vc\\x86\\include -I..\\external\\windows\\glad\\include -I..\\external\\windows\\freetype\\include"
+        libs_dirs = "/link /LIBPATH:..\\external\\windows\\glfw\\vc\\x86\\lib /LIBPATH:..\\external\\windows\\freetype\\libs\\vc\\x86"
         libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib freetype.lib"
         args = "/MD /D_CRT_SECURE_NO_WARNINGS"
         output = "/out:..\\bin\\vc\\main.exe"
@@ -54,6 +54,7 @@ elif opr_sys == 'Windows':
         # libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
         # args = "/DBUILD_WITH_EASY_PROFILER /MD"
         os.system("del *.obj")
+        print("platform: ", platform.architecture()[0])
     else:
         os.system("cls")
         print("\n-> Compiler '%s' not found\n" % sys.argv[1])

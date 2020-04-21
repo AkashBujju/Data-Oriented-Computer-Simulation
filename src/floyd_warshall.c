@@ -217,8 +217,6 @@ Paths* get_solution(int** cost, int** path, int len) {
 		paths->keys[i + 3] = 0;
 	}
 
-	printf("Here_00\n");
-
 	for (int v = 0; v < len; v++) {
 		for (int u = 0; u < len; u++) {
 			if (u != v && path[v][u] != -1) {
@@ -229,8 +227,6 @@ Paths* get_solution(int** cost, int** path, int len) {
 			}
 		}
 	}
-
-	printf("Here_01\n");
 
 	return paths;
 }

@@ -118,7 +118,6 @@ int main(int argc, char** argv) {
 	const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
 	window_width = video_mode->width;
 	window_height = video_mode->height;
-	printf("Here_1\n");
 
 	GLFWwindow *window = NULL;
 	if(strcmp(argv[1], "windowed") == 0) {
@@ -134,8 +133,6 @@ int main(int argc, char** argv) {
 	lastX = window_width / 2.0f;
 	lastY = window_height / 2.0f;
 
-	printf("Here_2\n");
-
 	glfwMaximizeWindow(window);	
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -149,8 +146,6 @@ int main(int argc, char** argv) {
 	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glfwSwapInterval(1);
-
-	printf("Here_3\n");
 
 	/* Load textures */
 	{
@@ -183,8 +178,6 @@ int main(int argc, char** argv) {
 		init_vector(&axes[1].color, 0, 1, 0);
 		init_vector(&axes[2].color, 0, 0, 1);
 	}
-
-	printf("Here_4\n");
 
 	/* Init grid */
 	// {
@@ -228,9 +221,7 @@ int main(int argc, char** argv) {
 	// translate_model(car_2, 0.25f, 0.4f, 10);
 	// scale_model(car_2, 0.4f, 0.4f, 0.4f);
 	
-	printf("Here_5\n");
 	init_sim();
-	printf("Here_6\n");
 	/* Loading models */
 
 	float fps = 0;
@@ -381,15 +372,15 @@ int main(int argc, char** argv) {
 			// draw_model(car_1, &view, &projection);
 			// draw_model(car_2, &view, &projection);
 
-			// for(int i = 0; i < TOTAL_ROADS; ++i) {
-			// 	draw_model(roads[i], &view, &projection);
-			// }
-			// for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
-			// 	draw_model(junctions[i], &view, &projection);
-			// }
-			// for(int i = 0; i < TOTAL_SIGNALS; ++i) {
-			// 	draw_model(signals[i], &view, &projection);
-			// }
+			for(int i = 0; i < TOTAL_ROADS; ++i) {
+				draw_model(roads[i], &view, &projection);
+			}
+			for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
+				draw_model(junctions[i], &view, &projection);
+			}
+			for(int i = 0; i < TOTAL_SIGNALS; ++i) {
+				draw_model(signals[i], &view, &projection);
+			}
 		}
 
 		glfwSwapBuffers(window);
@@ -447,7 +438,6 @@ void init_sim() {
 		}
 	}
 	/* CONNECT ID ROADS VERTICALLY */
-	printf("Here_7\n");
 
 	/* CONNECT ID ROADS HORIZONTALLY */
 	for(int i = 1; i <= 4; ++i) {
@@ -478,7 +468,6 @@ void init_sim() {
 		}
 	}
 	/* CONNECT ID ROADS HORIZONTALLY */
-	printf("Here_8\n");
 
 	/* CONNECT ID JUNCTIONS TO ROADS */
 	current_index = 0;
@@ -521,7 +510,6 @@ void init_sim() {
 		horizontal_road_start_id = (150 * 2 + 1) + (i * 6); // @Hardcoded
 	}
 	/* CONNECT ID JUNCTIONS TO ROADS */
-	printf("Here_9\n");
 
 	/* CONNECT SIGNAL TO JUNCTIONS */
 	current_index = 0;
@@ -551,7 +539,6 @@ void init_sim() {
 		}
 	}
 	/* CONNECT SIGNAL TO JUNCTIONS */
-	printf("Here_10\n");
 
 	float start_x = -21.6;
 	float start_z = 10;
@@ -580,8 +567,6 @@ void init_sim() {
 	}
 	/* Laying vertical roads */
 
-	printf("Here_10.5\n");
-
 	/* Laying horizontal roads */
 	start_x = -21.6 + 1.2f;
 	start_z = 10 - 1.2f * 3;
@@ -603,7 +588,6 @@ void init_sim() {
 		start_z -= 1.2f * 4;
 	}
 	/* Laying horizontal roads */
-	printf("Here_11\n");
 
 	/* Laying junctions and signals */
 	start_x = -21.6;
@@ -673,7 +657,6 @@ void init_sim() {
 		start_z = 10 - 1.2f * 3;
 	}
 	/* Laying junctions and signals */
-	printf("Here_12\n");
 
 	/* Copying position from Model to _models */
 	current_id = 1; // @Note: We need this to find the number of rows and columns of the matrix.
@@ -693,7 +676,6 @@ void init_sim() {
 		current_id += 1;
 	}
 	/* Copying position from Model to _models */
-	printf("Here_13\n");
 
 	/* Filling the matrix */
 	// @Note: We are not including the side junctions and signals in the matrix, as they are useless in pathfinding.
@@ -709,7 +691,6 @@ void init_sim() {
 		}
 	}
 
-	printf("Here_14\n");
 
 	for(int i = 0; i < TOTAL_ROADS; ++i) {
 		Road *road = get_road(road_keys, _roads, current_id, ROADS_LIMIT);
@@ -734,8 +715,6 @@ void init_sim() {
 		current_id += 1;
 	}
 
-	printf("Here_15\n");
-
 	/* Writing to file */
 	FILE *file = fopen(combine_string(assets_path, "/matrix/graph.matrix"), "w");
 	for(int i = 0; i < num_rows; ++i) {
@@ -746,30 +725,20 @@ void init_sim() {
 	}
 	fclose(file);
 
-	printf("Here_16\n");
-	
 	free(matrix); // @Note: We are not freeing the whole memory. For some reason free matrix[i] crashes!
 	/* Filling the matrix */
-
-	printf("Here_17\n");
 
 	/* Init Paths */
 	init_paths();
 
-	printf("Here_18\n");
 	/* Init Paths */
 }
 
 void init_paths() {
 	char* p = combine_string(assets_path, "matrix/graph.matrix");
-	printf("Here_19\n");
 	Matrix *mat = load_matrix(p);
 	convert_to_floyd_form(mat);
-	printf("Here_20\n");
-	// print_matrix_floyd(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
-	printf("Here_21\n");
-	printf("initialised paths\n");
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
