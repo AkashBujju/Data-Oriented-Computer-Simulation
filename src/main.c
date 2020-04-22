@@ -97,7 +97,7 @@ float distance(Vector3 *p1, Vector3 *p2);
 int n_lerp(Vector3 *start, Vector3 *current, Vector3 *destination, float *vel, float acc, float dcc, float top_vel);
 void init_sim();
 void init_paths();
-Vector3* get_position_of_id(int id);
+Vector3 get_position_of_id(int id);
 int is_road(int id);
 int is_junction(int id);
 int is_signal(int id);
@@ -430,11 +430,11 @@ void init_sim() {
 			}
 			else if(j == 15) {
 				road.to_forward_id = -1;
-				road.to_backward_id = current_id - 2;
+				road.to_backward_id = current_id - 1;
 			}
 			else if(j % 3 == 0) {
 				road.to_forward_id = start_junction_id + (j / 3) + ((i - 1) * 4) - 1; // @Note: '4' is the number of junction 'rows'.
-				road.to_backward_id = current_id - 2;
+				road.to_backward_id = current_id - 1;
 			}
 			else if(j != 1 && (j - 1) % 3 == 0) {
 				road.to_backward_id = start_junction_id + floor(j / 3) + ((i - 1) * 4) - 1; // @Note: '4' is the number of junction 'rows'.
@@ -442,7 +442,7 @@ void init_sim() {
 			}
 			else {
 				road.to_forward_id = current_id + 2;
-				road.to_backward_id = current_id - 2;
+				road.to_backward_id = current_id - 1;
 			}
 
 			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
@@ -467,11 +467,11 @@ void init_sim() {
 			}
 			else if(j % 3 == 0) {
 				road.to_forward_id = junc_id_1;
-				road.to_backward_id = current_id - 2;
+				road.to_backward_id = current_id - 1;
 			}
 			else {
 				road.to_forward_id = current_id + 2;
-				road.to_backward_id = current_id - 2;
+				road.to_backward_id = current_id - 1;
 			}
 
 			put_road(road_keys, _roads, current_id, &road, ROADS_LIMIT);
@@ -496,9 +496,9 @@ void init_sim() {
 			Junction junction;
 			junction.id = current_id;
 			junction.to_up_id = vertical_road_start_id + 2;
-			junction.to_down_id = vertical_road_start_id;
+			junction.to_down_id = vertical_road_start_id + 1;
 			junction.to_right_id = horizontal_road_start_id;
-			junction.to_left_id = horizontal_road_start_id - 2;
+			junction.to_left_id = horizontal_road_start_id - 1;
 			
 			// @Note: The signals are placed TL-TR-BL-BR from the starting from the top-left
 			junction.to_top_left_signal_id = current_signal_id;
@@ -521,9 +521,6 @@ void init_sim() {
 			if(j == 4) {
 				vertical_road_start_id += 6; // @Hardcoded
 			}
-			// if(j != 1) {
-			// 	horizontal_road_start_id += 9 * 6; // @Hardcoded
-			// }
 
 			horizontal_road_start_id += 27 * 2;
 		}
@@ -721,7 +718,7 @@ void init_sim() {
 			matrix[road->left_lane_id][road->to_forward_id] = 1;
 		}
 		if(road->right_lane_id != -1) {
-			matrix[road->right_lane_id][road->to_forward_id] = 1;
+			matrix[road->right_lane_id][road->to_backward_id] = 1;
 		}
 		current_id += 2;
 	}
@@ -763,13 +760,15 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
-	Road *road = get_road(road_keys, _roads, 355, ROADS_LIMIT);
-	printf("road_id: %d\n", road->left_lane_id);	
-	printf("to_forward_id: %d\n", road->to_forward_id);
-	printf("to_backward_id: %d\n", road->to_backward_id);
-
-	int start_node = 1;
-	int end_node = 515;
+	Junction *junction = get_junction(junction_keys, _junctions, 521, JUNCTIONS_LIMIT);
+	printf("junction_id: %d\n", junction->id);	
+	printf("to_top_id: %d\n", junction->to_up_id);
+	printf("to_down_id: %d\n", junction->to_down_id);
+	printf("to_left_id: %d\n", junction->to_left_id);
+	printf("to_right_id: %d\n", junction->to_right_id);
+	
+	int start_node = 301;
+	int end_node = 2;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -777,7 +776,7 @@ void init_paths() {
 		cuboid_paths = (Cuboid*)malloc(sizeof(Cuboid) * cuboid_paths_len);
 		for(int i = 2; i < paths->len[index]; ++i) {
 			int node_id = paths->p[index][i];
-			Vector3* pos = get_position_of_id(node_id);
+			Vector3 pos = get_position_of_id(node_id);
 
 			if(i == 2 || i == paths->len[index] - 1) {
 				make_cuboid(&cuboid_paths[i - 2], shader1, gray_texture);
@@ -786,9 +785,9 @@ void init_paths() {
 				make_cuboid(&cuboid_paths[i - 2], shader1, violet_texture);
 			}
 			scale_cuboid(&cuboid_paths[i - 2], 0.1f, 0.1f, 0.1f);
-			translate_cuboid(&cuboid_paths[i - 2], pos->x, pos->y + 0.5f, pos->z);
+			translate_cuboid(&cuboid_paths[i - 2], pos.x, pos.y + 0.5f, pos.z);
 
-			printf("node_id: %d, position: %.2f %.2f %.2f\n", node_id, pos->x, pos->y, pos->z);
+			printf("node_id: %d, position: %.2f %.2f %.2f\n", node_id, pos.x, pos.y, pos.z);
 		}
 		printf("\n");
 	}
@@ -816,21 +815,41 @@ int is_signal(int id) {
 	return 0;
 }
 
-Vector3* get_position_of_id(int id) {
+Vector3 get_position_of_id(int id) {
 	if(id >= road_id_start && id <= road_id_end) {
-		Road *road = get_road(road_keys, _roads, id, ROADS_LIMIT);
-		return &road->position;
+		Road *road = NULL;
+		if(id % 2 == 0)
+			road = get_road(road_keys, _roads, id - 1, ROADS_LIMIT);
+		else
+			road = get_road(road_keys, _roads, id, ROADS_LIMIT);
+		
+		Vector3 pos = road->position;
+		if(id >= 1 && id <= 300) {
+			if(id % 2 == 0) {
+				pos.x += 0.3f;
+			}
+			else {
+				pos.x -= 0.3f;
+			}
+		}
+		else {
+			if(id % 2 == 0) {
+				pos.z += 0.3f;
+			}
+			else {
+				pos.z -= 0.3f;
+			}
+		}
+		return pos;
 	}
 	else if(id >= junction_id_start && id <= junction_id_end) {
 		Junction *junction = get_junction(junction_keys, _junctions, id, JUNCTIONS_LIMIT);
-		return &junction->position;
+		return junction->position;
 	}
-	else if(id >= signal_id_start && id <= signal_id_end) {
+	else {
 		Signal *signal = get_signal(signal_keys, _signals, id, SIGNALS_LIMIT);
-		return &signal->position;
+		return signal->position;
 	}
-
-	return NULL;	
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
