@@ -98,6 +98,9 @@ int n_lerp(Vector3 *start, Vector3 *current, Vector3 *destination, float *vel, f
 void init_sim();
 void init_paths();
 Vector3* get_position_of_id(int id);
+int is_road(int id);
+int is_junction(int id);
+int is_signal(int id);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -425,7 +428,7 @@ void init_sim() {
 				road.to_forward_id = current_id + 2;
 				road.to_backward_id = -1;
 			}
-			else if(j == 10) {
+			else if(j == 15) {
 				road.to_forward_id = -1;
 				road.to_backward_id = current_id - 2;
 			}
@@ -450,6 +453,7 @@ void init_sim() {
 	/* CONNECT ID ROADS VERTICALLY */
 
 	/* CONNECT ID ROADS HORIZONTALLY */
+	unsigned int junc_id_1 = start_junction_id;
 	for(int i = 1; i <= 4; ++i) {
 		for(int j = 1; j <= 27; ++j) {
 			Road road;
@@ -458,13 +462,11 @@ void init_sim() {
 
 			if(j == 1 || (j - 1) % 3 == 0) {
 				road.to_forward_id = current_id + 2;
-				if(j == 1)
-					road.to_backward_id = start_junction_id + i - 1;
-				else
-					road.to_backward_id = start_junction_id + (floor(j / 3) * 4 + 1) + (i - 1) * 10 - 1; // @Note: '10' is the number of junction 'columns'. '4' is the number of junction 'rows'.
+				road.to_backward_id = junc_id_1;
+				junc_id_1 += 4;
 			}
 			else if(j % 3 == 0) {
-				road.to_forward_id = start_junction_id + ((j / 3) * 4 + 1) + (i - 1) * 10 - 1; // @Note: '10' is the number of junction 'columns'. '4' is the number of junction 'rows'.
+				road.to_forward_id = junc_id_1;
 				road.to_backward_id = current_id - 2;
 			}
 			else {
@@ -476,6 +478,7 @@ void init_sim() {
 			current_id += 2;
 			current_index += 1;
 		}
+		junc_id_1 = start_junction_id + i;
 	}
 	road_id_end = current_id - 1;
 	/* CONNECT ID ROADS HORIZONTALLY */
@@ -502,11 +505,11 @@ void init_sim() {
 			junction.to_top_right_signal_id = current_signal_id + 1;
 			junction.to_down_left_signal_id = current_signal_id + 2;
 			junction.to_down_right_signal_id = current_signal_id + 3;
-
-			if(j == 1) {
+			
+			if(i == 1) {
 				junction.to_left_id = -1;
 			}
-			else if(j == 10) {
+			else if(i == 10) {
 				junction.to_right_id = -1;
 			}
 
@@ -515,9 +518,14 @@ void init_sim() {
 			current_index += 1;
 			current_signal_id += 4;
 			vertical_road_start_id += 6; // @Hardcoded
-			if(j != 1) {
-				horizontal_road_start_id += 9 * 6; // @Hardcoded
+			if(j == 4) {
+				vertical_road_start_id += 6; // @Hardcoded
 			}
+			// if(j != 1) {
+			// 	horizontal_road_start_id += 9 * 6; // @Hardcoded
+			// }
+
+			horizontal_road_start_id += 27 * 2;
 		}
 		horizontal_road_start_id = (150 * 2 + 1) + (i * 6); // @Hardcoded
 	}
@@ -681,8 +689,9 @@ void init_sim() {
 		current_id += 2;
 	}
 	for(int i = 0; i < TOTAL_WORKING_JUNCTIONS; ++i) {
+		// @Note: Here the junction are placed the order: center, top_left, top_right, bottom_left, bottom_right
 		Junction *junction = get_junction(junction_keys, _junctions, current_id, JUNCTIONS_LIMIT);
-		copy_vector(&junction->position, &junctions[i]->position);
+		copy_vector(&junction->position, &junctions[i*5]->position); // @Note: i*5 because of the above note.
 		current_id += 1;
 	}
 	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
@@ -754,8 +763,13 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
+	Road *road = get_road(road_keys, _roads, 355, ROADS_LIMIT);
+	printf("road_id: %d\n", road->left_lane_id);	
+	printf("to_forward_id: %d\n", road->to_forward_id);
+	printf("to_backward_id: %d\n", road->to_backward_id);
+
 	int start_node = 1;
-	int end_node = 23;
+	int end_node = 515;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -782,25 +796,24 @@ void init_paths() {
 	// printf("road_id_start: %d, road_id_end: %d\n", road_id_start, road_id_end);
 	// printf("junction_id_start: %d, junction_id_end: %d\n", junction_id_start, junction_id_end);
 	// printf("signal_id_start: %d, signal_id_end: %d\n", signal_id_start, signal_id_end);
-	
-	for(int i = junction_id_start; i <= junction_id_end; ++i) {
-		Junction *junction = get_junction(junction_keys, _junctions, i, JUNCTIONS_LIMIT);
-		if(junction == NULL) {
-			printf("id: %d is NULL\n", i);
-		}
-	}
-	for(int i = road_id_start; i <= road_id_end; i += 2) {
-		Road *road = get_road(road_keys, _roads, i, ROADS_LIMIT);
-		if(road == NULL) {
-			printf("id: %d is NULL\n", i);
-		}
-	}
-	for(int i = signal_id_start; i <= signal_id_end; ++i) {
-		Signal *signal = get_signal(signal_keys, _signals, i, SIGNALS_LIMIT);
-		if(signal == NULL) {
-			printf("id(signal): %d is NULL\n", i);
-		}
-	}
+}
+
+int is_road(int id) {
+	if(id >= road_id_start && id <= road_id_end)
+		return 1;
+	return 0;
+}
+
+int is_junction(int id) {
+	if(id >= junction_id_start && id <= junction_id_end)
+		return 1;
+	return 0;
+}
+
+int is_signal(int id) {
+	if(id >= signal_id_start && id <= signal_id_end)
+		return 1;
+	return 0;
 }
 
 Vector3* get_position_of_id(int id) {
