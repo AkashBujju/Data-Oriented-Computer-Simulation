@@ -789,16 +789,10 @@ void init_paths() {
 			printf("id: %d is NULL\n", i);
 		}
 	}
-	for(int i = road_id_start; i <= road_id_end; i += 2) {
+	for(int i = road_id_start; i <= road_id_end; ++i) {
 		Road *road = get_road(road_keys, _roads, i, ROADS_LIMIT);
 		if(road == NULL) {
 			printf("id: %d is NULL\n", i);
-		}
-	}
-	for(int i = signal_id_start; i <= signal_id_end; ++i) {
-		Signal *signal = get_signal(signal_keys, _signals, i, SIGNALS_LIMIT);
-		if(signal == NULL) {
-			printf("id(signal): %d is NULL\n", i);
 		}
 	}
 }

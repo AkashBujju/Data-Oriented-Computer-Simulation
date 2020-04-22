@@ -54,7 +54,6 @@ elif opr_sys == 'Windows':
         # libs_dirs = "/link /LIBPATH:..\\external\\glfw\\vc\\x64\\lib /LIBPATH:..\\external\\easy_profiler\\lib"
         # args = "/DBUILD_WITH_EASY_PROFILER /MD"
         os.system("del *.obj")
-        print("platform: ", platform.architecture()[0])
     else:
         os.system("cls")
         print("\n-> Compiler '%s' not found\n" % sys.argv[1])
