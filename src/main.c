@@ -37,9 +37,12 @@ static Line axes[3];
 /* Textures */
 int violet_texture;
 int gray_texture;
+int red_texture;
 int road_texture;
 int junction_texture;
 int signal_red_texture;
+int palette_1_texture;
+int palette_2_texture;
 /* Textures */
 
 /* Modes */
@@ -53,7 +56,17 @@ static float zoom_speed = 1.0f;
 /* Display Text */
 
 /* Paths */
+typedef enum CAR_STATE {
+	START, STOP, MOVING, WAY_POINT
+} CAR_STATE;
 Paths *paths = NULL;
+Vector3 *all_pos = NULL;
+Vector3 current_dir;
+int num_pos;
+int current_index;
+float fixed_way_point_distance;
+Model* car;
+CAR_STATE car_state;
 /* Paths */
 
 /* Models */
@@ -101,6 +114,7 @@ Vector3 get_position_of_id(int id);
 int is_road(int id);
 int is_junction(int id);
 int is_signal(int id);
+void move();
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -159,10 +173,13 @@ int main(int argc, char** argv) {
 	/* Load textures */
 	{
 		violet_texture = make_texture(combine_string(assets_path, "png/safety_blue.png"));
+		red_texture = make_texture(combine_string(assets_path, "png/red.png"));
 		gray_texture = make_texture(combine_string(assets_path, "png/gray.png"));
 		signal_red_texture = make_texture(combine_string(assets_path, "png/red_signal.png"));
 		road_texture = make_texture(combine_string(assets_path, "png/road.png"));
 		junction_texture = make_texture(combine_string(assets_path, "png/junction_gimp.png"));
+		palette_1_texture = make_texture(combine_string(assets_path, "png/palette_1_gimp.png"));
+		palette_2_texture = make_texture(combine_string(assets_path, "png/palette_2_gimp.png"));
 	}
 
 	/* Init shaders */
@@ -204,7 +221,7 @@ int main(int argc, char** argv) {
 		projection = perspective(45.0f, (float)window_width / window_height, 0.1f, 500.0f);
 		text_projection = ortho(0, 1440.0f, 0, 900);
 		init_vector(&front, -0.49f, -0.56f, -0.67f);
-		init_vector(&position, 11.0f, 13.0, 15.0f);
+		init_vector(&position, -18.0f, 4.54f, 13);
 		init_vector(&up, 0, 1, 0);
 	}
 
@@ -218,17 +235,23 @@ int main(int argc, char** argv) {
 	FT_Library ft;
 	init_freetype(&ft);
 	init_font(&font, combine_string(assets_path, "fonts/consolas.ttf"), &ft);
-
 	/* Init font */
 
 	/* Loading models */
-	// Model *car_1 = load_model("car_1.model");
+	car = load_model("car_1.model", palette_1_texture);
+	scale_model(car, 0.4f, 0.4f, 0.4f);
 	// translate_model(car_1, 0.25f, 0.4f, 0);
-	// scale_model(car_1, 0.4f, 0.4f, 0.4f);
+	// rotate_model(car_1, 0, 1, 0, 180);
 
-	// Model *car_2 = load_model("car_2.model");
+	// Model *car_2 = load_model("car_2.model", palette_2_texture);
 	// translate_model(car_2, 0.25f, 0.4f, 10);
 	// scale_model(car_2, 0.4f, 0.4f, 0.4f);
+
+	// Vector3 vec1, vec2;
+	// init_vector(&vec1, 0, 0, 1);
+	// init_vector(&vec2, -1, 0, 0);
+	// float angle = get_angle(&vec1, &vec2);
+	// printf("angle: %.1f\n", angle);
 	
 	init_sim();
 	/* Loading models */
@@ -268,6 +291,8 @@ int main(int argc, char** argv) {
 
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		move();
 
 		// {
 		// 	if((now - c1.current_relax_secs) > 1) {
@@ -382,7 +407,7 @@ int main(int argc, char** argv) {
 		// }
 
 		{
-			// draw_model(car_1, &view, &projection);
+			draw_model(car, &view, &projection);
 			// draw_model(car_2, &view, &projection);
 
 			for(int i = 0; i < TOTAL_ROADS; ++i) {
@@ -760,25 +785,35 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
-	Junction *junction = get_junction(junction_keys, _junctions, 521, JUNCTIONS_LIMIT);
-	printf("junction_id: %d\n", junction->id);	
-	printf("to_top_id: %d\n", junction->to_up_id);
-	printf("to_down_id: %d\n", junction->to_down_id);
-	printf("to_left_id: %d\n", junction->to_left_id);
-	printf("to_right_id: %d\n", junction->to_right_id);
+	// Junction *junction = get_junction(junction_keys, _junctions, 521, JUNCTIONS_LIMIT);
+	// printf("junction_id: %d\n", junction->id);	
+	// printf("to_top_id: %d\n", junction->to_up_id);
+	// printf("to_down_id: %d\n", junction->to_down_id);
+	// printf("to_left_id: %d\n", junction->to_left_id);
+	// printf("to_right_id: %d\n", junction->to_right_id);
 	
-	int start_node = 301;
-	int end_node = 2;
+	int start_node = 1;
+	int end_node = 11;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
 		cuboid_paths_len = paths->len[index] - 2;
 		cuboid_paths = (Cuboid*)malloc(sizeof(Cuboid) * cuboid_paths_len);
+
+		num_pos = cuboid_paths_len;
+		all_pos = (Vector3*)malloc(sizeof(Vector3) * num_pos);
+		car_state = START;
+		current_index = -1;
+
 		for(int i = 2; i < paths->len[index]; ++i) {
 			int node_id = paths->p[index][i];
 			Vector3 pos = get_position_of_id(node_id);
+			copy_vector(&all_pos[i - 2], &pos);
 
-			if(i == 2 || i == paths->len[index] - 1) {
+			if(i == 2) {
+				make_cuboid(&cuboid_paths[i - 2], shader1, red_texture);
+			}
+			else if(i == paths->len[index] - 1) {
 				make_cuboid(&cuboid_paths[i - 2], shader1, gray_texture);
 			}
 			else {
@@ -792,9 +827,52 @@ void init_paths() {
 		printf("\n");
 	}
 
+	for(int i = 0; i < num_pos; ++i) {
+		printf("position: %.2f %.2f %.2f\n", all_pos[i].x, all_pos[i].y, all_pos[i].z);
+	}
+
 	// printf("road_id_start: %d, road_id_end: %d\n", road_id_start, road_id_end);
 	// printf("junction_id_start: %d, junction_id_end: %d\n", junction_id_start, junction_id_end);
 	// printf("signal_id_start: %d, signal_id_end: %d\n", signal_id_start, signal_id_end);
+}
+
+void move() {
+	if(car_state == START) {
+		translate_model(car, all_pos[0].x, all_pos[0].y + 0.4f, all_pos[0].z);
+		rotate_model(car, 0, 1, 0, 180);
+		car_state = WAY_POINT;
+		current_index = 0;
+	}
+	else if(car_state == WAY_POINT) {
+		Vector3* from = &all_pos[current_index];
+		Vector3* to = &all_pos[current_index + 1];
+		fixed_way_point_distance = get_distance(from, to);
+		current_dir = sub(to, from);
+		normalize_vector(&current_dir);
+		current_index += 1;
+		car_state = MOVING;
+	}
+	else if(car_state == MOVING) {
+		Vector3 tmp_pos = scalar_mul(&current_dir, 0.005f);
+		car->position = add(&car->position, &tmp_pos);
+
+		Vector3 from, to;
+		copy_vector(&from, &car->position);
+		copy_vector(&to, &all_pos[current_index - 1]);
+		from.y = 0;
+		to.y = 0;
+		float distance = get_distance(&from, &to);
+		// printf("distance: %.4f\n", distance);
+		// printf("fixed_way_point_distance: %.4f\n", fixed_way_point_distance);
+		// print_vector(&all_pos[current_index - 1]);
+		// printf("current_index - 1: %d\n", current_index - 1);
+		if(distance >= fixed_way_point_distance) {
+			printf("car->position: %.4f %.4f %.4f\n", car->position.x, car->position.y, car->position.z);
+			printf("way_point: %.4f %.4f %.4f\n", all_pos[current_index].x, all_pos[current_index].y, all_pos[current_index].z);
+			current_index += 1;
+			car_state = STOP;
+		}
+	}
 }
 
 int is_road(int id) {
@@ -825,20 +903,16 @@ Vector3 get_position_of_id(int id) {
 		
 		Vector3 pos = road->position;
 		if(id >= 1 && id <= 300) {
-			if(id % 2 == 0) {
+			if(id % 2 == 0)
 				pos.x += 0.3f;
-			}
-			else {
+			else
 				pos.x -= 0.3f;
-			}
 		}
 		else {
-			if(id % 2 == 0) {
+			if(id % 2 == 0)
 				pos.z += 0.3f;
-			}
-			else {
+			else
 				pos.z -= 0.3f;
-			}
 		}
 		return pos;
 	}
