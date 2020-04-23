@@ -613,21 +613,6 @@ Vector3 line_intersect(LineEq *line_eq_1, LineEq *line_eq_2) {
 	return result;
 }
 
-// @Note: This does not do what you think. This does not give correct angle for all the cases.
-float get_angle(Vector3* vec1, Vector3* vec2) {
-	float numerator = vec1->x*vec2->x + vec1->y*vec2->y + vec1->z * vec2->z;
-	float denominator = sqrt(vec1->x*vec1->x + vec1->y*vec1->y + vec1->z*vec1->z) * sqrt(vec2->x*vec2->x + vec2->y*vec2->y + vec2->z*vec2->z);
-	float angle = numerator / denominator;
-	angle = acos(angle) * (180 / 3.1415926f);
-
-	if(vec2->x > vec1->x)
-		angle = 360 - angle;
-	else if(vec2->z >= vec1->z)
-		angle += 180;
-
-	return angle;
-}
-
 void print_line(LineEq *line_eq) {
 	printf("Vector form: a: %.2f, b: %.2f, c: %.2f :: %.2f %.2f %.2f\n", line_eq->a, line_eq->b, line_eq->c, line_eq->x, line_eq->y, line_eq->z);
 }

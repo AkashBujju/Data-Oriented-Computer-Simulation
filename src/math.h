@@ -108,6 +108,5 @@ LineEq form_line(Vector3 *p1, Vector3 *p2);
 Vector3 line_intersection(LineEq *l1, LineEq *l2);
 LineEq form_line(Vector3 *p1, Vector3 *p2);
 Vector3 line_intersect(LineEq *line_eq_1, LineEq *line_eq_2);
-float get_angle(Vector3* vec1, Vector3* vec2);
 
 #endif

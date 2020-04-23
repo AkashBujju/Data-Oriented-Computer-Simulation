@@ -115,6 +115,7 @@ int is_road(int id);
 int is_junction(int id);
 int is_signal(int id);
 void move();
+float get_angle(Vector3* point_1, Vector3* point_2, Vector3* default_direction);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -785,15 +786,8 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
-	// Junction *junction = get_junction(junction_keys, _junctions, 521, JUNCTIONS_LIMIT);
-	// printf("junction_id: %d\n", junction->id);	
-	// printf("to_top_id: %d\n", junction->to_up_id);
-	// printf("to_down_id: %d\n", junction->to_down_id);
-	// printf("to_left_id: %d\n", junction->to_left_id);
-	// printf("to_right_id: %d\n", junction->to_right_id);
-	
 	int start_node = 1;
-	int end_node = 11;
+	int end_node = 416;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -827,10 +821,6 @@ void init_paths() {
 		printf("\n");
 	}
 
-	for(int i = 0; i < num_pos; ++i) {
-		printf("position: %.2f %.2f %.2f\n", all_pos[i].x, all_pos[i].y, all_pos[i].z);
-	}
-
 	// printf("road_id_start: %d, road_id_end: %d\n", road_id_start, road_id_end);
 	// printf("junction_id_start: %d, junction_id_end: %d\n", junction_id_start, junction_id_end);
 	// printf("signal_id_start: %d, signal_id_end: %d\n", signal_id_start, signal_id_end);
@@ -844,7 +834,6 @@ void move() {
 		current_index = 0;
 	}
 	else if(car_state == WAY_POINT) {
-		printf("current_index:%d num_pos: %d\n", current_index, num_pos);
 		if(current_index == num_pos - 1) {
 			car_state = STOP;	
 			return;
@@ -854,13 +843,15 @@ void move() {
 		fixed_way_point_distance = get_distance(from, to);
 		current_dir = sub(to, from);
 		normalize_vector(&current_dir);
-		float angle = get_angle(to, from);
+		Vector3 car_default_direction;
+		init_vector(&car_default_direction, 0, 0, 1);
+		float angle = get_angle(from, to, &car_default_direction);
 		rotate_model(car, 0, 1, 0, angle);
 		current_index += 1;
 		car_state = MOVING;
 	}
 	else if(car_state == MOVING) {
-		Vector3 tmp_pos = scalar_mul(&current_dir, 0.005f);
+		Vector3 tmp_pos = scalar_mul(&current_dir, 0.05f);
 		car->position = add(&car->position, &tmp_pos);
 
 		Vector3 from, to;
@@ -869,18 +860,48 @@ void move() {
 		from.y = 0;
 		to.y = 0;
 		float distance = get_distance(&from, &to);
-		// printf("distance: %.4f\n", distance);
-		// printf("fixed_way_point_distance: %.4f\n", fixed_way_point_distance);
-		// print_vector(&all_pos[current_index - 1]);
-		// printf("current_index - 1: %d\n", current_index - 1);
 		if(distance >= fixed_way_point_distance) {
-			// printf("car->position: %.4f %.4f %.4f\n", car->position.x, car->position.y, car->position.z);
-			// printf("way_point: %.4f %.4f %.4f\n", all_pos[current_index].x, all_pos[current_index].y, all_pos[current_index].z);
-			printf("current_index: %d\n", current_index);
 			car_state = WAY_POINT;
 		}
 	}
 	else if(car_state == STOP) {
+	}
+}
+
+// @Note: This does not do what you think. This does not give correct angle for all the cases.
+float get_angle(Vector3* point_1, Vector3* point_2, Vector3* default_direction) {
+	Vector3 tmp_1;
+	tmp_1.x = point_1->x + default_direction->x;
+	tmp_1.y = point_1->y + default_direction->y;
+	tmp_1.z = point_1->z + default_direction->z;
+
+	Vector3 vec1 = sub(&tmp_1, point_1);
+	Vector3 vec2 = sub(point_2, point_1);
+	
+	float x1 = vec1.x;
+	float x2 = vec2.x;
+	float z1 = vec1.z;
+	float z2 = vec2.z;
+	if(x1 == x2) {
+		if(z2 < z1)
+			return 180;
+		else
+			return 0;
+	}
+	else if(z1 == z2) {
+		if(x1 > x2)
+			return 90;
+		else
+			return 270;
+	}
+	else {
+		float numerator = vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
+		float denominator = sqrt(vec1.x * vec1.x + vec1.y * vec1.y + vec1.z * vec1.z) * sqrt(vec2.x * vec2.x + vec2.y * vec2.y + vec2.z * vec2.z);
+		float angle = acos(numerator / denominator) * (180 / 3.1415926f);
+		
+		if((x1 < x2 && z1 > z2) || (x1 < x2 && z1 < z2))
+			return 360 - angle;
+		return angle;
 	}
 }
 
