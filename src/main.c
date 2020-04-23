@@ -844,11 +844,18 @@ void move() {
 		current_index = 0;
 	}
 	else if(car_state == WAY_POINT) {
+		printf("current_index:%d num_pos: %d\n", current_index, num_pos);
+		if(current_index == num_pos - 1) {
+			car_state = STOP;	
+			return;
+		}
 		Vector3* from = &all_pos[current_index];
 		Vector3* to = &all_pos[current_index + 1];
 		fixed_way_point_distance = get_distance(from, to);
 		current_dir = sub(to, from);
 		normalize_vector(&current_dir);
+		float angle = get_angle(to, from);
+		rotate_model(car, 0, 1, 0, angle);
 		current_index += 1;
 		car_state = MOVING;
 	}
@@ -867,11 +874,13 @@ void move() {
 		// print_vector(&all_pos[current_index - 1]);
 		// printf("current_index - 1: %d\n", current_index - 1);
 		if(distance >= fixed_way_point_distance) {
-			printf("car->position: %.4f %.4f %.4f\n", car->position.x, car->position.y, car->position.z);
-			printf("way_point: %.4f %.4f %.4f\n", all_pos[current_index].x, all_pos[current_index].y, all_pos[current_index].z);
-			current_index += 1;
-			car_state = STOP;
+			// printf("car->position: %.4f %.4f %.4f\n", car->position.x, car->position.y, car->position.z);
+			// printf("way_point: %.4f %.4f %.4f\n", all_pos[current_index].x, all_pos[current_index].y, all_pos[current_index].z);
+			printf("current_index: %d\n", current_index);
+			car_state = WAY_POINT;
 		}
+	}
+	else if(car_state == STOP) {
 	}
 }
 
