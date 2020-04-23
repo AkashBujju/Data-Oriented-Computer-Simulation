@@ -803,7 +803,7 @@ void init_paths() {
 	paths = floyd_warshall(mat->mat, mat->len);
 
 	int start_node = 1;
-	int end_node = 2;
+	int end_node = 345;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -863,11 +863,24 @@ void move() {
 			return;
 		}
 		if(is_junction(all_ids[current_index + 1])) {
-			// int junction_id = all_ids[current_index + 1];
-			// Junction *junction = get_junction(junction_keys, _junctions, junction_id, JUNCTIONS_LIMIT);
-			// Signal *signal = get_signal(signal_keys, _signals, junction->to_top_left_signal_id, SIGNALS_LIMIT);
-			// signal->color = GREEN;
-			// printf("Junction: %d signal_id: %d angle: %.0f\n", junction_id, signal->id, current_angle);
+			int junction_id = all_ids[current_index + 1];
+			Junction *junction = get_junction(junction_keys, _junctions, junction_id, JUNCTIONS_LIMIT);
+			Signal *signal = NULL;
+			if(current_angle == 0) {
+				signal = get_signal(signal_keys, _signals, junction->to_down_right_signal_id, SIGNALS_LIMIT);
+			}
+			else if(current_angle == 180) {
+				signal = get_signal(signal_keys, _signals, junction->to_top_left_signal_id, SIGNALS_LIMIT);
+			}
+			else if(current_angle == 90) {
+				signal = get_signal(signal_keys, _signals, junction->to_down_left_signal_id, SIGNALS_LIMIT);
+			}
+			else {
+				signal = get_signal(signal_keys, _signals, junction->to_top_right_signal_id, SIGNALS_LIMIT);
+			}
+
+			if(signal->color == RED)
+				return;
 		}
 		Vector3* from = &all_pos[current_index];
 		Vector3* to = &all_pos[current_index + 1];
