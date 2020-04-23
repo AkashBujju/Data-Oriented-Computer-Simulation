@@ -41,6 +41,7 @@ int red_texture;
 int road_texture;
 int junction_texture;
 int signal_red_texture;
+int signal_green_texture;
 int palette_1_texture;
 int palette_2_texture;
 /* Textures */
@@ -61,12 +62,16 @@ typedef enum CAR_STATE {
 } CAR_STATE;
 Paths *paths = NULL;
 Vector3 *all_pos = NULL;
+int *all_ids = NULL;
 Vector3 current_dir;
 int num_pos;
 int current_index;
+float current_angle;
 float fixed_way_point_distance;
 Model* car;
 CAR_STATE car_state;
+
+SignalCounter signal_counter;
 /* Paths */
 
 /* Models */
@@ -116,6 +121,8 @@ int is_junction(int id);
 int is_signal(int id);
 void move();
 float get_angle(Vector3* point_1, Vector3* point_2, Vector3* default_direction);
+void copy_data_to_models();
+void update_all_signals(float time_passed);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -177,6 +184,7 @@ int main(int argc, char** argv) {
 		red_texture = make_texture(combine_string(assets_path, "png/red.png"));
 		gray_texture = make_texture(combine_string(assets_path, "png/gray.png"));
 		signal_red_texture = make_texture(combine_string(assets_path, "png/red_signal.png"));
+		signal_green_texture = make_texture(combine_string(assets_path, "png/green_signal.png"));
 		road_texture = make_texture(combine_string(assets_path, "png/road.png"));
 		junction_texture = make_texture(combine_string(assets_path, "png/junction_gimp.png"));
 		palette_1_texture = make_texture(combine_string(assets_path, "png/palette_1_gimp.png"));
@@ -285,15 +293,18 @@ int main(int argc, char** argv) {
 	// Vector3 start_pos;
 	// copy_vector(&start_pos, &origin.position);
 
+	float start = clock();
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
 		float before = clock();
-		// float now = (clock() - start) / CLOCKS_PER_SEC;
+		float now = (clock() - start) / CLOCKS_PER_SEC;
 
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		move();
+		copy_data_to_models();
+		update_all_signals(now);
 
 		// {
 		// 	if((now - c1.current_relax_secs) > 1) {
@@ -573,6 +584,11 @@ void init_sim() {
 			signal_3.main_junction_id = current_junction_id;
 			signal_4.main_junction_id = current_junction_id;
 
+			signal_1.color = RED;
+			signal_2.color = RED;
+			signal_3.color = RED;
+			signal_4.color = RED;
+
 			put_signal(signal_keys, _signals, current_signal_id, &signal_1, SIGNALS_LIMIT);
 			put_signal(signal_keys, _signals, current_signal_id + 1, &signal_2, SIGNALS_LIMIT);
 			put_signal(signal_keys, _signals, current_signal_id + 2, &signal_3, SIGNALS_LIMIT);
@@ -718,7 +734,7 @@ void init_sim() {
 		current_id += 1;
 	}
 	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
-		Signal *signal= get_signal(signal_keys, _signals, current_id, SIGNALS_LIMIT);
+		Signal *signal = get_signal(signal_keys, _signals, current_id, SIGNALS_LIMIT);
 		copy_vector(&signal->position, &signals[i]->position);
 		current_id += 1;
 	}
@@ -787,7 +803,7 @@ void init_paths() {
 	paths = floyd_warshall(mat->mat, mat->len);
 
 	int start_node = 1;
-	int end_node = 416;
+	int end_node = 2;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -796,6 +812,7 @@ void init_paths() {
 
 		num_pos = cuboid_paths_len;
 		all_pos = (Vector3*)malloc(sizeof(Vector3) * num_pos);
+		all_ids = (int*)malloc(sizeof(int) * num_pos);
 		car_state = START;
 		current_index = -1;
 
@@ -803,6 +820,7 @@ void init_paths() {
 			int node_id = paths->p[index][i];
 			Vector3 pos = get_position_of_id(node_id);
 			copy_vector(&all_pos[i - 2], &pos);
+			all_ids[i - 2] = node_id;
 
 			if(i == 2) {
 				make_cuboid(&cuboid_paths[i - 2], shader1, red_texture);
@@ -821,6 +839,11 @@ void init_paths() {
 		printf("\n");
 	}
 
+	signal_counter.should_start = 0;
+	signal_counter.time_stamp = 0;
+	signal_counter.signal_number = 1;
+	signal_counter.time_interval = 2;
+
 	// printf("road_id_start: %d, road_id_end: %d\n", road_id_start, road_id_end);
 	// printf("junction_id_start: %d, junction_id_end: %d\n", junction_id_start, junction_id_end);
 	// printf("signal_id_start: %d, signal_id_end: %d\n", signal_id_start, signal_id_end);
@@ -832,11 +855,19 @@ void move() {
 		rotate_model(car, 0, 1, 0, 180);
 		car_state = WAY_POINT;
 		current_index = 0;
+		current_angle = 0;
 	}
 	else if(car_state == WAY_POINT) {
 		if(current_index == num_pos - 1) {
 			car_state = STOP;	
 			return;
+		}
+		if(is_junction(all_ids[current_index + 1])) {
+			// int junction_id = all_ids[current_index + 1];
+			// Junction *junction = get_junction(junction_keys, _junctions, junction_id, JUNCTIONS_LIMIT);
+			// Signal *signal = get_signal(signal_keys, _signals, junction->to_top_left_signal_id, SIGNALS_LIMIT);
+			// signal->color = GREEN;
+			// printf("Junction: %d signal_id: %d angle: %.0f\n", junction_id, signal->id, current_angle);
 		}
 		Vector3* from = &all_pos[current_index];
 		Vector3* to = &all_pos[current_index + 1];
@@ -846,12 +877,13 @@ void move() {
 		Vector3 car_default_direction;
 		init_vector(&car_default_direction, 0, 0, 1);
 		float angle = get_angle(from, to, &car_default_direction);
+		current_angle = angle;
 		rotate_model(car, 0, 1, 0, angle);
 		current_index += 1;
 		car_state = MOVING;
 	}
 	else if(car_state == MOVING) {
-		Vector3 tmp_pos = scalar_mul(&current_dir, 0.05f);
+		Vector3 tmp_pos = scalar_mul(&current_dir, 0.03f);
 		car->position = add(&car->position, &tmp_pos);
 
 		Vector3 from, to;
@@ -866,6 +898,67 @@ void move() {
 	}
 	else if(car_state == STOP) {
 	}
+}
+
+void update_all_signals(float time_passed) {
+	if(signal_counter.should_start == 0) {
+		signal_counter.should_start = 1;
+		signal_counter.time_stamp = time_passed;
+	}
+	else {
+		if((time_passed - signal_counter.time_stamp) >= signal_counter.time_interval) {
+			signal_counter.time_stamp = time_passed;
+			unsigned int start_junction_id = 1 + (2 * (TOTAL_ROADS - 1)) + 2;
+			for(int i = 0; i < TOTAL_WORKING_JUNCTIONS; ++i) {
+				Junction *junction = get_junction(junction_keys, _junctions, start_junction_id, JUNCTIONS_LIMIT);
+				Signal *signal_tl = get_signal(signal_keys, _signals, junction->to_top_left_signal_id, SIGNALS_LIMIT);
+				Signal *signal_tr = get_signal(signal_keys, _signals, junction->to_top_right_signal_id, SIGNALS_LIMIT);
+				Signal *signal_bl = get_signal(signal_keys, _signals, junction->to_down_left_signal_id, SIGNALS_LIMIT);
+				Signal *signal_br = get_signal(signal_keys, _signals, junction->to_down_right_signal_id, SIGNALS_LIMIT);
+				signal_tl->color = RED;
+				signal_tr->color = RED;
+				signal_bl->color = RED;
+				signal_br->color = RED;
+				start_junction_id += 1;
+
+				// @Note: Clockwise.
+				if(signal_counter.signal_number == 1) {
+					signal_tl->color = GREEN;
+				}
+				else if(signal_counter.signal_number == 2) {
+					signal_tr->color = GREEN;
+				}
+				else if(signal_counter.signal_number == 3) {
+					signal_br->color = GREEN;
+				}
+				else if(signal_counter.signal_number == 4) {
+					signal_bl->color = GREEN;
+				}
+			}
+
+			signal_counter.signal_number += 1;
+			if(signal_counter.signal_number > 4)
+				signal_counter.signal_number = 1;
+		}
+
+	}
+}
+
+void copy_data_to_models() {
+	/* SIGNALS */
+	const unsigned int start_junction_id = 1 + (2 * (TOTAL_ROADS - 1)) + 2;
+	unsigned int start_signal_id = start_junction_id + TOTAL_WORKING_JUNCTIONS;
+
+	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
+		Signal *signal = get_signal(signal_keys, _signals, start_signal_id, SIGNALS_LIMIT);
+		if(signal->color == RED)
+			signals[i]->texture_id = signal_red_texture;
+		else
+			signals[i]->texture_id = signal_green_texture;
+
+		start_signal_id += 1;
+	}
+	/* SIGNALS */
 }
 
 // @Note: This does not do what you think. This does not give correct angle for all the cases.

@@ -3,6 +3,10 @@
 
 #include "math.h"
 
+typedef enum SIGNAL_COLOR {
+	RED, GREEN
+} SIGNAL_COLOR;
+
 typedef struct Car {
 	int id;
 	Vector3 position;
@@ -36,8 +40,16 @@ typedef struct Junction {
 
 typedef struct Signal {
 	int id;
+	SIGNAL_COLOR color;
 	int main_junction_id;
 	Vector3 position;
 } Signal;
+
+typedef struct SignalCounter {
+	float time_stamp;
+	float time_interval;
+	int should_start;
+	int signal_number; // 1: top_left, 2: top_right, 3: bottom_left, 4: bottom_right
+} SignalCounter;
 
 #endif
