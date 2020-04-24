@@ -13,10 +13,12 @@ typedef enum CAR_STATE {
 
 typedef struct Car {
 	Vector3 position;
+	Vector3 rotation_axes;
 	Vector3 current_direction;
 	int num_paths;
 	int current_index;
 	float current_angle;
+	float fixed_way_point_distance;
 	CAR_STATE car_state;
 	Vector3 *path_pos;
 	int *path_ids;
