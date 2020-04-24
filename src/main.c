@@ -29,10 +29,7 @@ int shader1, shader2, text_shader;
 
 static Font font;
 static Cuboid origin;
-static Cuboid* cuboid_paths;
-static int cuboid_paths_len;
 static Line axes[3];
-// static Grid grid;
 
 /* Textures */
 int violet_texture;
@@ -95,7 +92,7 @@ Signal _signals[SIGNALS_LIMIT];
 unsigned int signal_keys[SIGNALS_LIMIT];
 unsigned int signal_id_start, signal_id_end;
 
-#define CARS_LIMIT 512
+#define CARS_LIMIT 256
 Model _car_models[CARS_LIMIT];
 Car _cars[CARS_LIMIT];
 unsigned int car_keys[CARS_LIMIT];
@@ -130,6 +127,7 @@ float get_angle(Vector3* point_1, Vector3* point_2, Vector3* default_direction);
 void copy_data_to_models();
 void update_all_signals(float time_passed);
 void init_cars();
+int is_colliding(int car_id, float distance_to_maintain);
 
 const char* assets_path = "../../data/";
 const char* shaders_path = "../../shaders/";
@@ -327,11 +325,7 @@ int main(int argc, char** argv) {
 			draw_line(&axes[2], &view, &projection);
 		}
 
-		for(int i = 0; i < cuboid_paths_len; ++i)
-			draw_cuboid(&cuboid_paths[i], &view, &projection);
-
 		{
-			// draw_model(&car, &view, &projection);
 			for(int i = 0; i < current_num_cars; ++i) {
 				Model *car = get_car_model(car_model_keys, _car_models, current_car_ids[i], CARS_LIMIT);
 				draw_model(car, &view, &projection);
@@ -715,43 +709,6 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
-	int start_node = 5;
-	int end_node = 20;
-	int index = get(paths->keys, start_node, end_node, paths->limit);
-	if(index != -1) {
-		printf("index: %d\n", index);
-		cuboid_paths_len = paths->len[index] - 2;
-		cuboid_paths = (Cuboid*)malloc(sizeof(Cuboid) * cuboid_paths_len);
-
-		// num_pos = cuboid_paths_len;
-		// all_pos = (Vector3*)malloc(sizeof(Vector3) * num_pos);
-		// all_ids = (int*)malloc(sizeof(int) * num_pos);
-		// car_state = START;
-		// current_index = -1;
-
-		for(int i = 2; i < paths->len[index]; ++i) {
-			int node_id = paths->p[index][i];
-			Vector3 pos = get_position_of_id(node_id);
-			// copy_vector(&all_pos[i - 2], &pos);
-			// all_ids[i - 2] = node_id;
-
-			if(i == 2) {
-				make_cuboid(&cuboid_paths[i - 2], shader1, red_texture);
-			}
-			else if(i == paths->len[index] - 1) {
-				make_cuboid(&cuboid_paths[i - 2], shader1, gray_texture);
-			}
-			else {
-				make_cuboid(&cuboid_paths[i - 2], shader1, violet_texture);
-			}
-			scale_cuboid(&cuboid_paths[i - 2], 0.1f, 0.1f, 0.1f);
-			translate_cuboid(&cuboid_paths[i - 2], pos.x, pos.y + 0.5f, pos.z);
-
-			printf("node_id: %d, position: %.2f %.2f %.2f\n", node_id, pos.x, pos.y, pos.z);
-		}
-		printf("\n");
-	}
-
 	signal_counter.should_start = 0;
 	signal_counter.time_stamp = 0;
 	signal_counter.signal_number = 1;
@@ -763,13 +720,18 @@ void init_paths() {
 }
 
 void init_cars() {
-	current_num_cars = 2;
+	const int total = 10;
+	current_num_cars = 0;
 	unsigned int current_car_id = 1;
 
-	for(int i = 0; i < current_num_cars; ++i) {
+	for(int i = 0; i < total; ++i) {
 		current_car_ids[i] = current_car_id;
-		int index = get(paths->keys, 10*(i + 1), 20*(i + 1), paths->limit);
+		int index = get(paths->keys, i * 2 + 1, i * 2 + 2, paths->limit);
+		if(index == -1)
+			continue;
+
 		unsigned int len = paths->len[index] - 2;
+		current_num_cars += 1;
 
 		/* Making car */
 		Car car;
@@ -789,12 +751,42 @@ void init_cars() {
 
 		/* Making model */
 		Model car_model;
-		load_model(&car_model, "car_1.model", palette_1_texture);
+		if((i + 1) % 2 == 0)
+			load_model(&car_model, "car_1.model", palette_2_texture);
+		else
+			load_model(&car_model, "car_1.model", palette_1_texture);
+
 		scale_model(&car_model, 0.4f, 0.4f, 0.4f);
 		put_car_model(car_model_keys, _car_models, current_car_id, &car_model, CARS_LIMIT);
 
 		current_car_id += 1;
 	}
+	printf("current_num_cars: %d\n", current_num_cars);
+}
+
+int is_colliding(int car_id, float distance_to_maintain) {
+	Car *test_car = get_car(car_keys, _cars, car_id, CARS_LIMIT);
+
+	for(int i = 0; i < current_num_cars; ++i) {
+		unsigned int current_id = current_car_ids[i];
+		if(current_id == car_id)
+			continue;
+
+		Car *car = get_car(car_keys, _cars, current_id, CARS_LIMIT);
+		if(car->current_angle == test_car->current_angle) {
+			if((test_car->current_angle == 180 && test_car->position.z > car->position.z) || 
+				(test_car->current_angle == 0 && test_car->position.z < car->position.z) || 
+				// @Hack: for some reason current_angle == 90.0f fails.
+				(test_car->current_angle >= 89 && test_car->current_angle <= 91 && test_car->position.x > car->position.x) || 
+				(test_car->current_angle == 270 && test_car->position.x < car->position.x)) {
+				float distance = get_distance(&test_car->position, &car->position);
+				if(distance < distance_to_maintain)
+					return 1;
+			}
+		}
+	}
+
+	return 0;
 }
 
 void move() {
@@ -828,7 +820,7 @@ void move() {
 					signal = get_signal(signal_keys, _signals, junction->to_top_right_signal_id, SIGNALS_LIMIT);
 
 				if(signal->color == RED)
-					return;
+					continue;
 			}
 			Vector3* from = &car->path_pos[car->current_index];
 			Vector3* to = &car->path_pos[car->current_index + 1];
@@ -844,6 +836,9 @@ void move() {
 			car->car_state = MOVING;
 		}
 		else if(car->car_state == MOVING) {
+			if(is_colliding(current_id, 0.9f))
+				continue;
+
 			Vector3 tmp_pos = scalar_mul(&car->current_direction, 0.03f);
 			car->position = add(&car->position, &tmp_pos);
 
@@ -861,72 +856,6 @@ void move() {
 		}
 	}
 }
-
-/*
-void move() {
-	if(car_state == START) {
-		translate_model(&car, all_pos[0].x, all_pos[0].y + 0.4f, all_pos[0].z);
-		rotate_model(&car, 0, 1, 0, 180);
-		car_state = WAY_POINT;
-		current_index = 0;
-		current_angle = 0;
-	}
-	else if(car_state == WAY_POINT) {
-		if(current_index == num_pos - 1) {
-			car_state = STOP;	
-			return;
-		}
-		if(is_junction(all_ids[current_index + 1])) {
-			int junction_id = all_ids[current_index + 1];
-			Junction *junction = get_junction(junction_keys, _junctions, junction_id, JUNCTIONS_LIMIT);
-			Signal *signal = NULL;
-			if(current_angle == 0) {
-				signal = get_signal(signal_keys, _signals, junction->to_down_right_signal_id, SIGNALS_LIMIT);
-			}
-			else if(current_angle == 180) {
-				signal = get_signal(signal_keys, _signals, junction->to_top_left_signal_id, SIGNALS_LIMIT);
-			}
-			else if(current_angle == 90) {
-				signal = get_signal(signal_keys, _signals, junction->to_down_left_signal_id, SIGNALS_LIMIT);
-			}
-			else {
-				signal = get_signal(signal_keys, _signals, junction->to_top_right_signal_id, SIGNALS_LIMIT);
-			}
-
-			if(signal->color == RED)
-				return;
-		}
-		Vector3* from = &all_pos[current_index];
-		Vector3* to = &all_pos[current_index + 1];
-		fixed_way_point_distance = get_distance(from, to);
-		current_dir = sub(to, from);
-		normalize_vector(&current_dir);
-		Vector3 car_default_direction;
-		init_vector(&car_default_direction, 0, 0, 1);
-		float angle = get_angle(from, to, &car_default_direction);
-		current_angle = angle;
-		rotate_model(&car, 0, 1, 0, angle);
-		current_index += 1;
-		car_state = MOVING;
-	}
-	else if(car_state == MOVING) {
-		Vector3 tmp_pos = scalar_mul(&current_dir, 0.03f);
-		car.position = add(&car.position, &tmp_pos);
-
-		Vector3 from, to;
-		copy_vector(&from, &car.position);
-		copy_vector(&to, &all_pos[current_index - 1]);
-		from.y = 0;
-		to.y = 0;
-		float distance = get_distance(&from, &to);
-		if(distance >= fixed_way_point_distance) {
-			car_state = WAY_POINT;
-		}
-	}
-	else if(car_state == STOP) {
-	}
-}
-*/
 
 // @Note: Switches lights of signals every 'signal_counter.time_interval' seconds, clockwise.
 void update_all_signals(float time_passed) {
@@ -1112,9 +1041,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glfwSetCursorPosCallback(window, mouse_callback);
 		}
 	}
-	// else if (key == GLFW_KEY_T && action == GLFW_PRESS) {
-	// 	toggle_grid = !toggle_grid;
-	// }
 }
 
 void process_command(char* command) {
