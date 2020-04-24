@@ -7,14 +7,19 @@ typedef enum SIGNAL_COLOR {
 	RED, GREEN
 } SIGNAL_COLOR;
 
+typedef enum CAR_STATE {
+	START, STOP, MOVING, WAY_POINT
+} CAR_STATE;
+
 typedef struct Car {
-	int id;
 	Vector3 position;
-	Vector3 start_position;
-	Vector3 to_follow_position;
-	float should_stop;
-	float current_relax_secs;
-	float vel;
+	Vector3 current_direction;
+	int num_paths;
+	int current_index;
+	float current_angle;
+	CAR_STATE car_state;
+	Vector3 *path_pos;
+	int *path_ids;
 } Car;
 
 typedef struct Road {

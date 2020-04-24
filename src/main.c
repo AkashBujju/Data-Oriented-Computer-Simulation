@@ -57,9 +57,6 @@ static float zoom_speed = 1.0f;
 /* Display Text */
 
 /* Paths */
-typedef enum CAR_STATE {
-	START, STOP, MOVING, WAY_POINT
-} CAR_STATE;
 Paths *paths = NULL;
 Vector3 *all_pos = NULL;
 int *all_ids = NULL;
@@ -75,14 +72,14 @@ SignalCounter signal_counter;
 /* Paths */
 
 /* Models */
-#define TOTAL_ROADS 150 + 9 * 3 * 4
+#define TOTAL_ROADS 258
 #define ROADS_LIMIT 512
 Model *roads[TOTAL_ROADS];
 Road _roads[ROADS_LIMIT];
 unsigned int road_keys[ROADS_LIMIT];
 unsigned int road_id_start, road_id_end;
 
-#define TOTAL_JUNCTIONS 40 * 5
+#define TOTAL_JUNCTIONS 200
 #define TOTAL_WORKING_JUNCTIONS 40
 #define JUNCTIONS_LIMIT 256
 Model *junctions[TOTAL_JUNCTIONS];
@@ -90,12 +87,16 @@ Junction _junctions[JUNCTIONS_LIMIT];
 unsigned int junction_keys[JUNCTIONS_LIMIT];
 unsigned int junction_id_start, junction_id_end;
 
-#define TOTAL_SIGNALS 40 * 4
+#define TOTAL_SIGNALS 160
 #define SIGNALS_LIMIT 256
 Model *signals[TOTAL_SIGNALS];
 Signal _signals[SIGNALS_LIMIT];
 unsigned int signal_keys[SIGNALS_LIMIT];
 unsigned int signal_id_start, signal_id_end;
+
+#define CARS_LIMIT 512
+Model *car_models[CARS_LIMIT];
+Car *cars[CARS_LIMIT];
 /* Models */
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -214,16 +215,6 @@ int main(int argc, char** argv) {
 		init_vector(&axes[2].color, 0, 0, 1);
 	}
 
-	/* Init grid */
-	// {
-	// 	make_grid(&grid, 100, 100, 0.2f, 0.2f);
-	// 	translate_grid(&grid, 0, 0, 0);
-	// 	rotate_grid(&grid, 1, 0, 0, 90);
-	// 	rotate_rectangle(&grid.background, 1, 0, 0, 90);
-	// 	scale_rectangle(&grid.background, 10, 10, 10);
-	// }
-	/* Init grid */
-
 	/* init view & projection */
 	{
 		make_identity(&view);
@@ -249,50 +240,11 @@ int main(int argc, char** argv) {
 	/* Loading models */
 	car = load_model("car_1.model", palette_1_texture);
 	scale_model(car, 0.4f, 0.4f, 0.4f);
-	// translate_model(car_1, 0.25f, 0.4f, 0);
-	// rotate_model(car_1, 0, 1, 0, 180);
-
-	// Model *car_2 = load_model("car_2.model", palette_2_texture);
-	// translate_model(car_2, 0.25f, 0.4f, 10);
-	// scale_model(car_2, 0.4f, 0.4f, 0.4f);
-
-	// Vector3 vec1, vec2;
-	// init_vector(&vec1, 0, 0, 1);
-	// init_vector(&vec2, -1, 0, 0);
-	// float angle = get_angle(&vec1, &vec2);
-	// printf("angle: %.1f\n", angle);
 	
 	init_sim();
 	/* Loading models */
 
 	float fps = 0;
-	// float start = clock();
-
-	// Car c1, c2;
-	// {
-	// 	c1.id = 1;
-	// 	c1.should_stop = 0;
-	// 	c1.current_relax_secs = 0;
-	// 	c1.vel = 0.01;
-	// 	copy_vector(&c1.start_position, &car_1->position);
-	// 	copy_vector(&c1.position, &car_1->position);
-	// 	copy_vector(&c1.to_follow_position, &car_2->position);
-
-	// 	c2.id = 2;
-	// 	c2.should_stop = 0;
-	// 	c2.current_relax_secs = 0;
-	// 	c2.vel = 0.01;
-	// 	Vector3 to_follow;
-	// 	copy_vector(&to_follow, &car_2->position);
-	// 	to_follow.z += 50;
-	// 	copy_vector(&c2.start_position, &car_2->position);
-	// 	copy_vector(&c2.position, &car_2->position);
-	// 	copy_vector(&c2.to_follow_position, &to_follow);
-	// }
-
-	// Vector3 start_pos;
-	// copy_vector(&start_pos, &origin.position);
-
 	float start = clock();
 	while (!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -305,47 +257,6 @@ int main(int argc, char** argv) {
 		move();
 		copy_data_to_models();
 		update_all_signals(now);
-
-		// {
-		// 	if((now - c1.current_relax_secs) > 1) {
-		// 		c1.should_stop = 0;
-		// 	}
-
-		// 	if(!c1.should_stop) {
-		// 		int res = n_lerp(&c1.start_position, &c1.position, &c1.to_follow_position, &c1.vel, 0.001, 0.001, 3);
-		// 		if(res) {
-		// 			c1.current_relax_secs = now;
-		// 			c1.should_stop = 1;
-		// 		}
-		// 		else {
-		// 			c1.position.z += c1.vel;
-		// 		}
-		// 	}
-
-		// 	copy_vector(&c1.to_follow_position, &car_2->position);
-		// 	c1.to_follow_position.z -= 0.5f;
-		// 	copy_vector(&car_1->position, &c1.position);
-		// }
-
-		// {
-		// 	if((now - c2.current_relax_secs) > 1) {
-		// 		c2.should_stop = 0;
-		// 	}
-
-		// 	if(!c2.should_stop) {
-		// 		int res = n_lerp(&c2.start_position, &c2.position, &c2.to_follow_position, &c2.vel, 0.001, 0.001, 3);
-		// 		if(res) {
-		// 			c2.current_relax_secs = now;
-		// 			c2.should_stop = 1;
-		// 		}
-		// 		else {
-		// 			c2.position.z += c2.vel;
-		// 		}
-		// 	}
-
-		// 	// copy_vector(&c2.to_follow_position, &car_2->position);
-		// 	copy_vector(&car_2->position, &c2.position);
-		// }
 
 		Vector3 pos_plus_front = add(&position, &front);
 		view = look_at(&position, &pos_plus_front, &up);
@@ -410,27 +321,18 @@ int main(int argc, char** argv) {
 			draw_line(&axes[2], &view, &projection);
 		}
 
-		for(int i = 0; i < cuboid_paths_len; ++i) {
+		for(int i = 0; i < cuboid_paths_len; ++i)
 			draw_cuboid(&cuboid_paths[i], &view, &projection);
-		}
-
-		// if(toggle_grid) {
-		// 	draw_grid(&grid, &view, &projection);
-		// }
 
 		{
 			draw_model(car, &view, &projection);
-			// draw_model(car_2, &view, &projection);
 
-			for(int i = 0; i < TOTAL_ROADS; ++i) {
+			for(int i = 0; i < TOTAL_ROADS; ++i)
 				draw_model(roads[i], &view, &projection);
-			}
-			for(int i = 0; i < TOTAL_JUNCTIONS; ++i) {
+			for(int i = 0; i < TOTAL_JUNCTIONS; ++i)
 				draw_model(junctions[i], &view, &projection);
-			}
-			for(int i = 0; i < TOTAL_SIGNALS; ++i) {
+			for(int i = 0; i < TOTAL_SIGNALS; ++i)
 				draw_model(signals[i], &view, &projection);
-			}
 		}
 
 		glfwSwapBuffers(window);
@@ -802,8 +704,8 @@ void init_paths() {
 	convert_to_floyd_form(mat);
 	paths = floyd_warshall(mat->mat, mat->len);
 
-	int start_node = 1;
-	int end_node = 345;
+	int start_node = 5;
+	int end_node = 20;
 	int index = get(paths->keys, start_node, end_node, paths->limit);
 	if(index != -1) {
 		printf("index: %d\n", index);
@@ -913,6 +815,7 @@ void move() {
 	}
 }
 
+// @Note: Switches lights of signals every 'signal_counter.time_interval' seconds, clockwise.
 void update_all_signals(float time_passed) {
 	if(signal_counter.should_start == 0) {
 		signal_counter.should_start = 1;
@@ -953,14 +856,12 @@ void update_all_signals(float time_passed) {
 			if(signal_counter.signal_number > 4)
 				signal_counter.signal_number = 1;
 		}
-
 	}
 }
 
 void copy_data_to_models() {
 	/* SIGNALS */
-	const unsigned int start_junction_id = 1 + (2 * (TOTAL_ROADS - 1)) + 2;
-	unsigned int start_signal_id = start_junction_id + TOTAL_WORKING_JUNCTIONS;
+	unsigned int start_signal_id = signal_id_start;
 
 	for(int i = 0; i < TOTAL_SIGNALS; ++i) {
 		Signal *signal = get_signal(signal_keys, _signals, start_signal_id, SIGNALS_LIMIT);
