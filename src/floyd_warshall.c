@@ -6,28 +6,11 @@
 #include <time.h>
 #include <math.h>
 
-// void init_matrix(Matrix* matrix, int len);
-// void convert_to_int(char** str, int* res, int len);
-// void convert_to_floyd_form(Matrix* mat);
-// Matrix* load_matrix(const char* filename);
-// char** split(char* src, const char* delim, int* des_len);
-// Paths* floydWarshall(int** graph, int len);
-// int* get_path(int** path, int v, int u, int* des_len);
-// Paths* get_solution(int** cost, int** path, int len);
-// int combine_ints(int num_1, int num_2);
-// int get(int* keys, int src_node, int des_node, int limit);
-// int put(int src_node, int des_node, int* keys, int** paths, int* path, int limit);
-// unsigned int get_hash(char* str, int len, int limit);
-// char* get_str(int num_1, int num_2);
-// int get_closest_power_of_2(int number);
-// int get_unique_number(int num1, int num2);
-// void print_paths(Paths* paths);
-
 unsigned int get_hash(char* str, int len, int limit) {
 	unsigned int hash = 5381;
 	int c;
 
-	while (c = *str++)
+	while ((c = (*str++)))
 		hash = ((hash << 5) + hash) + c;
 
 	return hash % limit;
@@ -36,7 +19,8 @@ unsigned int get_hash(char* str, int len, int limit) {
 int get(int* keys, int src_node, int des_node, int limit) {
 	int key = get_unique_number(src_node, des_node);
 	char key_in_str[20];
-	_itoa(key, key_in_str, 10);
+	// _itoa(key, key_in_str, 10);
+	sprintf(key_in_str, "%d", key);
 	int len = strlen(key_in_str);
 	unsigned int i = get_hash(key_in_str, len, limit);
 	int result_key = keys[i];
@@ -55,7 +39,8 @@ int get(int* keys, int src_node, int des_node, int limit) {
 int put(int src_node, int des_node, int* keys, int** paths, int* path, int limit) {
 	int key = get_unique_number(src_node, des_node);
 	char key_in_str[20];
-	_itoa(key, key_in_str, 10);
+	// _itoa(key, key_in_str, 10);
+	sprintf(key_in_str, "%d", key);
 	int len = strlen(key_in_str);
 	unsigned int i = get_hash(key_in_str, len, limit);
 	int result_key = keys[i];
@@ -75,15 +60,15 @@ int put(int src_node, int des_node, int* keys, int** paths, int* path, int limit
 }
 
 char** split(char* src, const char* delim, int* des_len) {
-	char* next = NULL, * token = NULL;
+	char *token = NULL;
 	char** str = (char**)malloc(sizeof(char*) * 2048);
 	unsigned int index = 0;
 
-	token = strtok_s(src, delim, &next);
+	token = strtok(src, delim);
 	if (token != NULL)
 		str[index++] = token;
 
-	while ((token = strtok_s(NULL, delim, &next)) != NULL) {
+	while ((token = strtok(NULL, delim)) != NULL) {
 		str[index++] = token;
 	}
 
@@ -110,7 +95,7 @@ void init_matrix_floyd(Matrix* matrix, int len) {
 
 Matrix* load_matrix(const char* filename) {
 	FILE* file = NULL;
-	fopen_s(&file, filename, "r");
+	file = fopen(filename, "r");
 
 	fseek(file, 0, SEEK_END);
 	int size = ftell(file);
@@ -297,8 +282,11 @@ Paths* floyd_warshall(int** graph, int len) {
 int combine_ints(int num_1, int num_2) {
 	char a[15], b[15], c[30];
 
-	_itoa(num_1, a, 10);
-	_itoa(num_2, b, 10);
+	sprintf(a, "%d", num_1);
+	sprintf(b, "%d", num_2);
+
+	// _itoa(num_1, a, 10);
+	// _itoa(num_2, b, 10);
 
 	int index_1 = 0, index_2 = 0;
 	while (a[index_1] != '\0')
@@ -337,8 +325,11 @@ char* get_str(int num_1, int num_2) {
 	char a[15], b[15];
 	char* c = (char*)malloc(sizeof(char) * 15);
 
-	_itoa(num_1, a, 10);
-	_itoa(num_2, b, 10);
+	sprintf(a, "%d", num_1);
+	sprintf(b, "%d", num_2);
+
+	// _itoa(num_1, a, 10);
+	// _itoa(num_2, b, 10);
 
 	int index_1 = 0, index_2 = 0;
 	while (a[index_1] != '\0')

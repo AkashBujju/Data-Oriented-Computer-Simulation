@@ -26,4 +26,4 @@ elif opr_sys == 'Windows':
         print("Error: \n ----- Pass the specific compiler output to run - gcc | vc\n");
         sys.exit()
 
-os.system("main.exe fullscreen")
+os.system("main.exe windowed")

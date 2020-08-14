@@ -720,13 +720,13 @@ void init_paths() {
 }
 
 void init_cars() {
-	const int total = 10;
+	const int total = 350;
 	current_num_cars = 0;
 	unsigned int current_car_id = 1;
 
 	for(int i = 0; i < total; ++i) {
 		current_car_ids[i] = current_car_id;
-		int index = get(paths->keys, i * 2 + 1, i * 2 + 2, paths->limit);
+		int index = get(paths->keys, i * 2 + 1, i * 2 + 10, paths->limit);
 		if(index == -1)
 			continue;
 

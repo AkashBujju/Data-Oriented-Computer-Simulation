@@ -28,6 +28,7 @@ elif opr_sys == 'Windows':
     if sys.argv[1] == 'gcc':
         os.system("cls")
         print("Operating system is Windows")
+        print("Error: 'gcc' on 'windows' is not available for now!")
         cc = "gcc"
         filenames = "*.c"
         external_files = "..\\external\\windows\\stb_image.c ..\\external\\windows\\glad.c"
@@ -47,7 +48,7 @@ elif opr_sys == 'Windows':
         libs_dirs = "/link /LIBPATH:..\\external\\windows\\glfw\\vc\\x86\\lib /LIBPATH:..\\external\\windows\\freetype\\libs\\vc\\x86"
         libs = "gdi32.lib opengl32.lib kernel32.lib user32.lib shell32.lib glfw3.lib freetype.lib"
         args = "/MD /D_CRT_SECURE_NO_WARNINGS"
-        output = "/out:..\\bin\\vc\\main.exe"
+        output = "/DEBUG:full /out:..\\bin\\vc\\main.exe"
         command = cc + " " + args + " " + filenames + " " + external_files + " " + includes + " " + libs_dirs + " " + libs + " " + output
         os.system(command)
         # includes = "/I..\\external\\glfw\\vc\\x64\\include /I..\\external\\glad\\include /I..\\external\\easy_profiler\\include"
